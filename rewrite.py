@@ -89,14 +89,49 @@ class SecondColumn(QWidget):
         super().__init__(parent)
 
         self.image_array = []   # List to store image pixel data
+        self.output_widgets = []  # List to store output widgets    
 
         self.secon_layout = QVBoxLayout(self)
         
+        self.compare_layout = QHBoxLayout()
+        self.secon_layout.addLayout(self.compare_layout)
+
         self.compare_title = QLabel("Порівняння категорій")
         self.compare_title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.compare_title.setMinimumWidth(510)
         self.compare_title.setStyleSheet("font-size: 14px; color: #ffd500; padding: 10px;")
-        self.secon_layout.addWidget(self.compare_title, alignment=Qt.AlignmentFlag.AlignTop)
+        self.compare_layout.addWidget(self.compare_title, alignment=Qt.AlignmentFlag.AlignHCenter)
+
+        
+
+        self.mode_1 = QLabel("Точки")
+        self.mode_1.setStyleSheet("color: #ffd500;")
+
+        self.mode_2 = QLabel("Сітка")
+        self.mode_2.setStyleSheet("color: #ffd500;")
+
+        self.switch_mode = QSlider()
+        self.switch_mode.setFixedSize(60, 30)
+        self.switch_mode.setOrientation(Qt.Orientation.Horizontal)
+        self.switch_mode.setMinimum(1)
+        self.switch_mode.setMaximum(2)
+        self.switch_mode.setValue(1)
+        self.switch_mode.setTickInterval(1)
+        self.switch_mode.setTickPosition(QSlider.TickPosition.NoTicks)
+        self.switch_mode.valueChanged.connect(self.switch_mode_func)
+
+        self.switch_layout = QHBoxLayout()
+        self.switch_widget = QWidget()
+        self.switch_widget.setLayout(self.switch_layout)
+
+        self.switch_layout.addWidget(self.mode_2)
+        self.switch_layout.addWidget(self.switch_mode)
+        self.switch_layout.addWidget(self.mode_1)
+
+        self.compare_layout.addWidget(self.switch_widget, alignment=Qt.AlignmentFlag.AlignRight)
+
+
+
+        
 
         self.image_widget = QWidget()
         self.image_widget.setStyleSheet("border: 1px solid #808080; border-radius: 10px; background-color: #2b2b2b;")
@@ -107,7 +142,9 @@ class SecondColumn(QWidget):
         self.image1 = ClickableLabel(self)
         self.image1.setStyleSheet("border: none; background: transparent")
         self.image1.setMinimumHeight(135)
+        self.image1.setMinimumWidth(240)
         self.image2 = QLabel()
+        self.image2.setMinimumWidth(240)
         self.image2.setStyleSheet("border: none; background: transparent")
         self.image_layout.addWidget(self.image1)
         self.image_layout.addWidget(self.image2)
@@ -152,25 +189,24 @@ class SecondColumn(QWidget):
         self.slider_value.setText(str(self.radius_slider.value()))
         self.radius_slider.valueChanged.connect(lambda value: self.slider_value.setText(str(value)))
         
-        self.point_overlay = PointPlacer(self, image1=self.image1, slider = self.radius_slider, second_column=self)
+        self.point_overlay = PointPlacer(self, image1=self.image1, slider = self.radius_slider, second_column=self, mode = self.switch_mode.value())
         self.point_overlay.resize(self.image1.size())
         self.point_overlay.show()
 
 
-        duped_layer = Duped_layer(self, image2 = self.image2, slider = self.radius_slider)
-        duped_layer.resize(self.image2.size())
-        duped_layer.show()
+        self.duped_layer = Duped_layer(self, image2 = self.image2, slider = self.radius_slider, mode = self.switch_mode.value())
+        self.duped_layer.resize(self.image2.size())
+        self.duped_layer.show()
 
 
-        self.point_overlay.right_clicked.connect(self.del_color)
-        self.point_overlay.right_clicked.connect(duped_layer.delete_point)
+        self.point_overlay.right_clicked.connect(self.duped_layer.delete_point)
 
         self.image1.clicked.connect(self.point_overlay.add_point)
         self.image1.clicked.connect(self.point_overlay.average_colors)
-        self.image1.clicked.connect(duped_layer.add_point)
+        self.image1.clicked.connect(self.duped_layer.add_point)
 
         self.help_overlay.addWidget(self.point_overlay)
-        self.help_overlay2.addWidget(duped_layer)
+        self.help_overlay2.addWidget(self.duped_layer)
 
         self.point_overlay.send_color.connect(self.add_color)
 
@@ -194,28 +230,39 @@ class SecondColumn(QWidget):
                                 "np_array": self.img_ar})  # Store the image array
 
     def add_color(self, color, x, y, which):
-        output = Image_Output(self, second_col=self)
-        output.set_color(color)
-        self.first_color_col.addWidget(output)
+        self.output = Image_Output(self, second_col=self)
+        self.output.set_color(color)
+        self.first_color_col.addWidget(self.output)
+
+        self.output_widgets.append(self.output)  # Store the output widget
 
         if which == "first":
-            self.first_color_col.addWidget(output)
+            self.first_color_col.addWidget(self.output)
         else:
-            self.second_color_col.addWidget(output)
+            self.second_color_col.addWidget(self.output)
 
         for p in self.point_overlay.points:
             if p["x"] == x and p["y"] == y:
                 if which == "first":
-                    p["label_first"] = output
+                    p["label_first"] = self.output
                 else:
-                    p["label_second"] = output
+                    p["label_second"] = self.output
                 break
 
 
-        
-         
-    def del_color(self):
-        pass
+    def switch_mode_func(self):
+        if self.switch_mode.value() == 1:
+            self.point_overlay.show()
+            self.duped_layer.show()
+
+            for widget in self.output_widgets:
+                widget.show()
+        else:
+            self.point_overlay.hide()
+            self.duped_layer.hide()
+
+            for widget in self.output_widgets:
+                widget.hide()
 
 
 
@@ -242,8 +289,6 @@ class Image_Output(QWidget):
     def set_color(self, color):
         r, g, b = color
         self.color_value.setText(str(color))
-
-        #print(color)
         
         self.color.setStyleSheet(f"background-color: rgb({r},{g},{b}); border: 1px solid black; border-radius: 2px;")
 
@@ -465,10 +510,11 @@ class PointPlacer(QLabel):
     right_clicked = pyqtSignal(int, int)
     send_color = pyqtSignal(tuple, int, int, str)  # Signal to send average color and coordinates
 
-    def __init__(self, parent=None, image1=None, slider = None, second_column=None):
+    def __init__(self, parent=None, image1=None, slider = None, second_column=None, mode=None):
         super().__init__(parent)
 
         self.second_column = second_column
+        self.mode = mode
         
         self.setStyleSheet("background-color: transparent;")
         self.setGeometry(0, 0, self.parent().width(), self.parent().height())
@@ -500,7 +546,7 @@ class PointPlacer(QLabel):
         image1.show()
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.RightButton:
+        if event.button() == Qt.MouseButton.RightButton and self.mode == 1:
             self.x, self.y = int(event.position().x()), int(event.position().y())
             self.point_added.emit(self.x, self.y)
             self.right_clicked.emit(self.x, self.y)
@@ -514,9 +560,13 @@ class PointPlacer(QLabel):
                 if (px - self.x)**2 + (py - self.y)**2 <= radius**2:
                     img.deleteLater()
                     if point.get("label_first"):
+                        self.second_column.output_widgets.remove(point["label_first"])
+
                         point["label_first"].deleteLater()
 
                     if point.get("label_second"):
+                        self.second_column.output_widgets.remove(point["label_second"])
+
                         point["label_second"].deleteLater()
 
                     self.points.remove(point)
@@ -537,29 +587,17 @@ class PointPlacer(QLabel):
 
         for img_arr in self.second_column.image_array:    
             if img_arr["path"] in selected_paths:
-                arr = img_arr["np_array"]
-                h, w, _ = arr.shape
+                
+                calculator = Average_color(
+                    img_arr["np_array"],
+                    self.second_column.image1.width(),
+                    self.second_column.image1.height()
+                )
 
-                label_w = self.second_column.image1.width()
-                label_h = self.second_column.image1.height()
-
-                scale_x = w / label_w # Calculate scaling factors
-                scale_y = h / label_h
-
-                real_x = int(x * scale_x) # Convert to real image coordinates
-                real_y = int(y * scale_y)
-
-                x_min = max(real_x - rad, 0) # Ensure we don't go out of bounds
-                x_max = min(real_x + rad, w)
-                y_min = max(real_y - rad, 0)
-                y_max = min(real_y + rad, h)
-
-                region = arr[y_min:y_max + 1, x_min:x_max + 1, :] # Extract the region
-                avg_chanel = np.mean(region, axis=(0, 1)) # Calculate the average color
-                avg_color = tuple(avg_chanel.astype(int)) # Convert to integer tuple
+                avg_color = calculator.calculate(x, y, rad)
 
                 which = "first" if img_arr["path"] == SelectableImageBox.path[1] else "second"
-
+                
                 avg_colors.append(avg_color)
                 self.send_color.emit(avg_color, x, y, which)  # Emit the average color
 
@@ -575,12 +613,13 @@ class PointPlacer(QLabel):
 
 
 class Duped_layer(QLabel):
-    def __init__(self, parent=None, image2=None, slider = None):
+    def __init__(self, parent=None, image2=None, slider = None, mode=None):
         super().__init__(parent)
         
         self.setStyleSheet("background-color: transparent;")
         self.setGeometry(0, 0, self.parent().width(), self.parent().height())
 
+        self.mode = mode
         self.points = []
         self.radius_slider = slider
         
@@ -599,6 +638,7 @@ class Duped_layer(QLabel):
         image1.show()
 
     def delete_point(self, xp, yp):
+        if self.mode == 1:
             x, y = int(xp), int(yp)
             for px, py, img, radius in self.points:
                 if (px - x)**2 + (py - y)**2 <= radius**2:
@@ -606,10 +646,38 @@ class Duped_layer(QLabel):
                     self.points.remove((px, py, img, radius))
                     break      
 
-        
 
 
 
+
+
+
+class Average_color:
+    def __init__(self, image_arr, label_width, label_height):
+        self.img_arr = image_arr
+        self.label_w = label_width
+        self.label_h = label_height
+
+
+    def calculate(self, x, y, rad):
+        h, w, _ = self.img_arr.shape
+
+        scale_x = w / self.label_w
+        scale_y = h / self.label_h
+            
+        real_x = int(x * scale_x)
+        real_y = int(y * scale_y)
+
+        x_min = max(real_x - rad, 0)
+        x_max = min(real_x + rad, w)
+        y_min = max(real_y - rad, 0)
+        y_max = min(real_y + rad, h)
+
+        region = self.img_arr[y_min:y_max + 1, x_min:x_max + 1, :]
+        avg_chanel = np.mean(region, axis=(0, 1))
+
+        avg_color = tuple(avg_chanel.astype(int))
+        return avg_color
 
 if __name__ == "__main__":
     app = QApplication([])
