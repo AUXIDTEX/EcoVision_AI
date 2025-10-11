@@ -9,6 +9,7 @@ from PyQt6.QtCore import Qt, QPoint, pyqtSignal
 from PIL import Image
 from PIL.ImageQt import ImageQt
 import numpy as np
+import math
 
 
 
@@ -217,6 +218,11 @@ class SecondColumn(QWidget):
         self.second_color_col = QVBoxLayout()
         self.color_layout.addLayout(self.second_color_col)
 
+        self.grid_overlay = Grid_Analyzer(self, self.image1)
+        self.grid_overlay.resize(self.image1.size())
+        self.help_overlay.addWidget(self.grid_overlay)
+        self.grid_overlay.hide()
+
         self.secon_layout.addStretch()
 
 
@@ -254,12 +260,16 @@ class SecondColumn(QWidget):
         if self.switch_mode.value() == 1:
             self.point_overlay.show()
             self.duped_layer.show()
+            self.grid_overlay.hide()
 
             for widget in self.output_widgets:
                 widget.show()
         else:
             self.point_overlay.hide()
             self.duped_layer.hide()
+            self.grid_overlay.show()
+            self.grid_overlay.img_arr = self.image_array[0]["np_array"] if self.image_array else None
+            self.grid_overlay.draw_grid()
 
             for widget in self.output_widgets:
                 widget.hide()
@@ -597,7 +607,7 @@ class PointPlacer(QLabel):
                 avg_color = calculator.calculate(x, y, rad)
 
                 which = "first" if img_arr["path"] == SelectableImageBox.path[1] else "second"
-                
+
                 avg_colors.append(avg_color)
                 self.send_color.emit(avg_color, x, y, which)  # Emit the average color
 
@@ -678,6 +688,53 @@ class Average_color:
 
         avg_color = tuple(avg_chanel.astype(int))
         return avg_color
+    
+class Grid_Analyzer(QLabel):
+    def __init__(self, parent=None, target_label=None, img_arr=None):
+        super().__init__(parent)
+
+        self.img_arr = img_arr
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.setStyleSheet("background-color: transparent;")
+
+        self.target_label = target_label
+
+    def draw_grid(self):
+        h, w, _ = self.img_arr.shape
+        square_size = math.gcd(w, h)
+
+        scale_x = self.width() / w
+        scale_y = self.height() / h
+
+        avg_img_color = tuple(np.mean(self.img_arr, axis=(0, 1)).astype(int))
+
+        for y in range(0, h, square_size):
+            for x in range(0, w, square_size):
+                    
+                y_max = min(y + square_size, h)
+                x_max = min(x + square_size, w)
+                region = self.img_arr[y:y_max, x:x_max]
+
+                avg_square = tuple(np.mean(region, axis=(0, 1)).astype(int))
+                diff = np.linalg.norm(np.array(avg_square) - np.array((avg_img_color)))
+
+                if diff > 70:
+                    highlight = "rgba(255, 0, 0, 0.4)"
+
+                else:
+                    highlight = "transparent"
+
+                frame = QLabel(self.target_label)
+                frame.setGeometry(
+                    int(x * scale_x), 
+                    int(y * scale_y), 
+                    int((x_max - x) * scale_x), 
+                    int((y_max - y) * scale_y)
+                )
+                frame.setStyleSheet(f"background-color: {highlight}; border: 1px solid #007acc;")
+                frame.show()
+                    
+
 
 if __name__ == "__main__":
     app = QApplication([])
