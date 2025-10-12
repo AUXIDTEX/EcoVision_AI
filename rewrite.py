@@ -1,4 +1,3 @@
-
 # PyQt6 imports
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QLabel, QFileDialog, QFrame, QSlider
 from PyQt6.QtGui import QPixmap
@@ -90,7 +89,8 @@ class SecondColumn(QWidget):
         super().__init__(parent)
 
         self.image_array = []   # List to store image pixel data
-        self.output_widgets = []  # List to store output widgets    
+        self.output_widgets = []  # List to store output widgets 
+        self.mesh_arr = []   
 
         self.secon_layout = QVBoxLayout(self)
         
@@ -124,9 +124,9 @@ class SecondColumn(QWidget):
         self.switch_widget = QWidget()
         self.switch_widget.setLayout(self.switch_layout)
 
-        self.switch_layout.addWidget(self.mode_2)
-        self.switch_layout.addWidget(self.switch_mode)
         self.switch_layout.addWidget(self.mode_1)
+        self.switch_layout.addWidget(self.switch_mode)
+        self.switch_layout.addWidget(self.mode_2)
 
         self.compare_layout.addWidget(self.switch_widget, alignment=Qt.AlignmentFlag.AlignRight)
 
@@ -218,12 +218,45 @@ class SecondColumn(QWidget):
         self.second_color_col = QVBoxLayout()
         self.color_layout.addLayout(self.second_color_col)
 
-        self.grid_overlay = Grid_Analyzer(self, self.image1)
+
+
+        self.grid_overlay = Grid_Analyzer(self, self.image1, mesh_arr=self.mesh_arr)
         self.grid_overlay.resize(self.image1.size())
         self.help_overlay.addWidget(self.grid_overlay)
         self.grid_overlay.hide()
 
+
+
+        self.diff_widget = QWidget()
+        self.diff_widget.hide()
+        self.secon_layout.addWidget(self.diff_widget, alignment=Qt.AlignmentFlag.AlignRight)
+        self.diff_layout = QVBoxLayout()
+        self.diff_widget.setLayout(self.diff_layout)
+
+        self.diff_title_layout = QHBoxLayout()
+        self.diff_layout.addLayout(self.diff_title_layout)
+
+        self.diff_title = QLabel("Відмінність (%)")
+        self.diff_title.setStyleSheet("color: #ffd500;")
+        self.diff_title_layout.addWidget(self.diff_title)
+
+        self.diff_value = QLabel()
+        self.diff_title_layout.addWidget(self.diff_value)
+        self.diff_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.diff_value.setMinimumHeight(25)
+        self.diff_value.setStyleSheet("border: 1px solid #808080; border-radius: 10px;")
+
+        self.diff_slider = QSlider(Qt.Orientation.Horizontal)
+        self.diff_layout.addWidget(self.diff_slider)
+        self.diff_slider.valueChanged.connect(lambda value: self.diff_value.setText(str(value)))
+        self.diff_slider.valueChanged.connect(self.rewrite_grid)
+        self.diff_slider.setMinimumWidth(200)
+        self.diff_slider.setMinimum(0)
+        self.diff_slider.setMaximum(100)
+        self.diff_slider.setValue(35)
+
         self.secon_layout.addStretch()
+
 
 
     def add_image_to_array(self, file_path):
@@ -262,20 +295,40 @@ class SecondColumn(QWidget):
             self.duped_layer.show()
             self.grid_overlay.hide()
 
+
             for widget in self.output_widgets:
                 widget.show()
+            
+            for frame in self.mesh_arr:
+                frame.deleteLater()
+            self.mesh_arr.clear()
+
+            self.slider_widget.show()
+            self.diff_widget.hide()
         else:
+
             self.point_overlay.hide()
             self.duped_layer.hide()
+
             self.grid_overlay.show()
             self.grid_overlay.img_arr = self.image_array[0]["np_array"] if self.image_array else None
-            self.grid_overlay.draw_grid()
+            self.grid_overlay.draw_grid(self.diff_slider.value())
+
+            self.slider_widget.hide()
+            self.diff_widget.show()
 
             for widget in self.output_widgets:
                 widget.hide()
 
 
 
+    def rewrite_grid(self):
+        if not self.image_array:
+            return
+        
+
+        self.grid_overlay.img_arr = self.image_array[0]["np_array"]
+        self.grid_overlay.draw_grid(self.diff_slider.value())
 
 
 
@@ -689,17 +742,25 @@ class Average_color:
         avg_color = tuple(avg_chanel.astype(int))
         return avg_color
     
+
+
+
+    
 class Grid_Analyzer(QLabel):
-    def __init__(self, parent=None, target_label=None, img_arr=None):
+    def __init__(self, parent=None, target_label=None, img_arr=None, mesh_arr=None):
         super().__init__(parent)
 
         self.img_arr = img_arr
+        self.mesh_arr = mesh_arr
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.setStyleSheet("background-color: transparent;")
 
         self.target_label = target_label
 
-    def draw_grid(self):
+    def draw_grid(self, treshold):
+        #treshold = treshold if treshold is not None else 35
+
+        
         h, w, _ = self.img_arr.shape
         square_size = math.gcd(w, h)
 
@@ -708,32 +769,56 @@ class Grid_Analyzer(QLabel):
 
         avg_img_color = tuple(np.mean(self.img_arr, axis=(0, 1)).astype(int))
 
-        for y in range(0, h, square_size):
-            for x in range(0, w, square_size):
+        if not self.mesh_arr:
+            for y in range(0, h, square_size):
+                for x in range(0, w, square_size):
+
+                    print("Drawing grid...")
                     
-                y_max = min(y + square_size, h)
-                x_max = min(x + square_size, w)
-                region = self.img_arr[y:y_max, x:x_max]
+                    y_max = min(y + square_size, h)
+                    x_max = min(x + square_size, w)
+                    region = self.img_arr[y:y_max, x:x_max]
 
-                avg_square = tuple(np.mean(region, axis=(0, 1)).astype(int))
-                diff = np.linalg.norm(np.array(avg_square) - np.array((avg_img_color)))
+                    avg_square = tuple(np.mean(region, axis=(0, 1)).astype(int))
+                    pol_dist = np.linalg.norm(np.array(avg_square) - np.array((avg_img_color)))
 
-                if diff > 70:
-                    highlight = "rgba(255, 0, 0, 0.4)"
+                    diff = int((pol_dist / 441.67) * 100)  # Normalize to percentage (0-100)
 
-                else:
-                    highlight = "transparent"
+                    if diff > treshold:
+                        highlight = "rgba(255, 0, 0, 0.4)"
 
-                frame = QLabel(self.target_label)
-                frame.setGeometry(
-                    int(x * scale_x), 
-                    int(y * scale_y), 
-                    int((x_max - x) * scale_x), 
-                    int((y_max - y) * scale_y)
-                )
-                frame.setStyleSheet(f"background-color: {highlight}; border: 1px solid #007acc;")
-                frame.show()
+                    else:
+                        highlight = "transparent"
+
+                    frame = QLabel(self.target_label)
+                    frame.setGeometry(
+                        int(x * scale_x), 
+                        int(y * scale_y), 
+                        int((x_max - x) * scale_x), 
+                        int((y_max - y) * scale_y)
+                    )
+                    frame.setStyleSheet(f"background-color: {highlight}; border: 1px solid #000000;")
+                    frame.show()
                     
+                    self.mesh_arr.append(frame)
+
+        else:
+
+            idx = 0
+            for y in range(0, h, square_size):
+                for x in range(0, w, square_size):
+                    y_max = min(y + square_size, h)
+                    x_max = min(x + square_size, w)
+                    region = self.img_arr[y:y_max, x:x_max]
+
+                    avg_square = tuple(np.mean(region, axis=(0, 1)).astype(int))
+                    pol_dist = np.linalg.norm(np.array(avg_square) - np.array(avg_img_color))
+                    diff = int((pol_dist / 441.67) * 100)
+
+                    highlight = "rgba(255, 0, 0, 0.4)" if diff > treshold else "transparent"
+
+                    self.mesh_arr[idx].setStyleSheet(f"background-color: {highlight}; border: 1px solid #000000;")
+                    idx += 1
 
 
 if __name__ == "__main__":
