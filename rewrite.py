@@ -749,17 +749,21 @@ class Average_color:
 class Grid_Analyzer(QLabel):
     def __init__(self, parent=None, target_label=None, img_arr=None, mesh_arr=None):
         super().__init__(parent)
-
         self.img_arr = img_arr
         self.mesh_arr = mesh_arr
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.setStyleSheet("background-color: transparent;")
-
+        self.treshold = 35
         self.target_label = target_label
 
     def draw_grid(self, treshold):
-        #treshold = treshold if treshold is not None else 35
-
+        self.treshold = treshold
+        self.update()
+        
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if self.img_arr is None:
+            return
         
         h, w, _ = self.img_arr.shape
         square_size = math.gcd(w, h)
@@ -769,57 +773,39 @@ class Grid_Analyzer(QLabel):
 
         avg_img_color = tuple(np.mean(self.img_arr, axis=(0, 1)).astype(int))
 
-        if not self.mesh_arr:
-            for y in range(0, h, square_size):
-                for x in range(0, w, square_size):
+        painter = QPainter(self)
+        pen = QPen(QColor(0, 0, 0, 150)) 
+        pen.setWidth(1)
+        painter.setPen(pen)
 
-                    print("Drawing grid...")
-                    
-                    y_max = min(y + square_size, h)
-                    x_max = min(x + square_size, w)
-                    region = self.img_arr[y:y_max, x:x_max]
+        for y in range(0, h, square_size):
+            for x in range(0, w, square_size):
+                y_max = min(y + square_size, h)
+                x_max = min(x + square_size, w)
+                region = self.img_arr[y:y_max, x:x_max]
 
-                    avg_square = tuple(np.mean(region, axis=(0, 1)).astype(int))
-                    pol_dist = np.linalg.norm(np.array(avg_square) - np.array((avg_img_color)))
+                avg_square = tuple(np.mean(region, axis=(0, 1)).astype(int))
+                pol_dist = np.linalg.norm(np.array(avg_square) - np.array((avg_img_color)))
+                diff = int((pol_dist / 441.67) * 100)  # Normalize to percentage (0-100)
 
-                    diff = int((pol_dist / 441.67) * 100)  # Normalize to percentage (0-100)
-
-                    if diff > treshold:
-                        highlight = "rgba(255, 0, 0, 0.4)"
-
-                    else:
-                        highlight = "transparent"
-
-                    frame = QLabel(self.target_label)
-                    frame.setGeometry(
+                if diff > self.treshold:
+                    brush = QColor(255, 0, 0, 100)  # Red with some transparency
+                    painter.fillRect(
                         int(x * scale_x), 
                         int(y * scale_y), 
                         int((x_max - x) * scale_x), 
-                        int((y_max - y) * scale_y)
+                        int((y_max - y) * scale_y), 
+                        brush
                     )
-                    frame.setStyleSheet(f"background-color: {highlight}; border: 1px solid #000000;")
-                    frame.show()
-                    
-                    self.mesh_arr.append(frame)
+                
+                painter.drawRect(
+                    int(x * scale_x), 
+                    int(y * scale_y), 
+                    int((x_max - x) * scale_x), 
+                    int((y_max - y) * scale_y)
+                    )
 
-        else:
-
-            idx = 0
-            for y in range(0, h, square_size):
-                for x in range(0, w, square_size):
-                    y_max = min(y + square_size, h)
-                    x_max = min(x + square_size, w)
-                    region = self.img_arr[y:y_max, x:x_max]
-
-                    avg_square = tuple(np.mean(region, axis=(0, 1)).astype(int))
-                    pol_dist = np.linalg.norm(np.array(avg_square) - np.array(avg_img_color))
-                    diff = int((pol_dist / 441.67) * 100)
-
-                    highlight = "rgba(255, 0, 0, 0.4)" if diff > treshold else "transparent"
-
-                    self.mesh_arr[idx].setStyleSheet(f"background-color: {highlight}; border: 1px solid #000000;")
-                    idx += 1
-
+        painter.end()
 
 if __name__ == "__main__":
     app = QApplication([])
