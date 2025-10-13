@@ -69,13 +69,20 @@ class MainWindow(QMainWindow):
 
         self.scroll_area.setWidget(self.cats_frame)
         self.main_col.addWidget(self.scroll_area, alignment=Qt.AlignmentFlag.AlignTop)
-        self.main_col.addStretch()
 
-        self.second_col = SecondColumn()
+
+        self.settings_widget = QWidget()
+        self.settings_layout = QHBoxLayout()
+        self.main_col.addWidget(self.settings_widget)
+        self.settings_widget.setLayout(self.settings_layout)
+        self.settings_widget.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 8px; padding: 5px;")
+
+        self.second_col = SecondColumn(self, settings_layout = self.settings_layout)
         self.second_col.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.Main_layout.addWidget(self.second_col, stretch=1) 
 
-
+        self.main_col.addStretch()
+        
 
     def add_category(self):
         category_name = self.name_input.text().strip()
@@ -99,12 +106,14 @@ class MainWindow(QMainWindow):
 
 
 class SecondColumn(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, settings_layout=None):
         super().__init__(parent)
 
         self.image_array = []   # List to store image pixel data
         self.output_widgets = []  # List to store output widgets 
         self.mesh_arr = []   
+
+        self.settings_layout = settings_layout
 
         self.secon_layout = QVBoxLayout(self)
         
@@ -149,8 +158,6 @@ class SecondColumn(QWidget):
 
         self.compare_layout.addWidget(self.switch_widget, alignment=Qt.AlignmentFlag.AlignRight)
 
-
-
         
 
         self.image_widget = QWidget()
@@ -183,15 +190,16 @@ class SecondColumn(QWidget):
         self.sliders_widget.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 10px; padding: 5px;")
         self.sliders_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.sliders_layout = QHBoxLayout()
+        self.sliders_layout.addStretch()
         self.sliders_widget.setLayout(self.sliders_layout)
-        self.secon_layout.addWidget(self.sliders_widget, alignment=Qt.AlignmentFlag.AlignRight)
 
 
         self.slider_widget = QWidget()
+        self.settings_layout.addWidget(self.slider_widget, alignment=Qt.AlignmentFlag.AlignRight)
+
         self.slider_widget.setStyleSheet("background-color: transparent; border: none;")
         self.slider_layout = QVBoxLayout()
         self.slider_widget.setLayout(self.slider_layout)
-        self.sliders_layout.addWidget(self.slider_widget)
 
         self.title_value_layout = QHBoxLayout()
         self.slider_layout.addLayout(self.title_value_layout)
@@ -248,10 +256,14 @@ class SecondColumn(QWidget):
 
 
         self.first_color_widget = QWidget()
+        self.first_color_widget.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 8px;")
         self.first_color_col = QVBoxLayout(self.first_color_widget)
+        self.first_color_col.addStretch()
 
         self.second_color_widget = QWidget()
+        self.second_color_widget.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 8px;")
         self.second_color_col = QVBoxLayout(self.second_color_widget)
+        self.second_color_col.addStretch()
 
         self.first_scroll = QScrollArea()
         self.first_scroll.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -272,13 +284,11 @@ class SecondColumn(QWidget):
 
 
 
-
-
-
         self.diff_widget = QWidget()
+        self.settings_layout.addWidget(self.diff_widget, alignment=Qt.AlignmentFlag.AlignRight)
+
         self.diff_widget.setStyleSheet("background-color: transparent; border: none;")
         self.diff_widget.hide()
-        self.sliders_layout.addWidget(self.diff_widget)
         self.diff_layout = QVBoxLayout()
         self.diff_widget.setLayout(self.diff_layout)
 
@@ -311,11 +321,12 @@ class SecondColumn(QWidget):
 
 
         self.sizer_widget = QWidget()
+        self.settings_layout.addWidget(self.sizer_widget, alignment=Qt.AlignmentFlag.AlignRight)
+
         self.sizer_widget.setStyleSheet("background-color: transparent; border: none;")
         self.sizer_widget.hide()
         self.sizer_layout = QVBoxLayout()
         self.sizer_widget.setLayout(self.sizer_layout)
-        self.sliders_layout.insertWidget(0, self.sizer_widget)
 
         self.sizer_title_layout = QHBoxLayout()
         self.sizer_layout.addLayout(self.sizer_title_layout)
@@ -336,11 +347,11 @@ class SecondColumn(QWidget):
         self.sizer_layout.addWidget(self.sizer_slider)
         self.sizer_slider.setMinimumWidth(200)
         self.sizer_slider.setMinimum(1)
-        self.sizer_slider.setMaximum(5)
+        self.sizer_slider.setMaximum(10)
         self.sizer_slider.setValue(1)
 
         self.sizer_slider.valueChanged.connect(lambda value: self.sizer_input.setText(str(value)))
-        self.sizer_input.textChanged.connect(lambda text: self.sizer_slider.setValue(int(text)) if text.isdigit() and 1 <= int(text) <= 5 else None)
+        self.sizer_input.textChanged.connect(lambda text: self.sizer_slider.setValue(int(text)) if text.isdigit() and 1 <= int(text) <= 10 else None)
         self.sizer_input.returnPressed.connect(lambda: self.sizer_input.clearFocus())
         self.sizer_slider.valueChanged.connect(self.resize_grid)
 
@@ -351,8 +362,11 @@ class SecondColumn(QWidget):
         self.grid_overlay.hide()
 
 
+        self.grid_overlay2 = Grid_Analyzer(self, self.image2, mesh_arr = self.mesh_arr, sizer_slider = self.sizer_slider)
+        self.grid_overlay2.resize(self.image2.size())
+        self.help_overlay2.addWidget(self.grid_overlay2)
+        self.grid_overlay2.hide()
 
-        #self.secon_layout.addStretch()
 
 
 
@@ -363,21 +377,24 @@ class SecondColumn(QWidget):
         self.img_ar = np.array(self.img)
         self.image_array.append({
                                 "path": self.file_path,
-                                "np_array": self.img_ar})  # Store the image array
+                                "np_array": self.img_ar}) 
         
+
+
+
 
     def add_color(self, color, x, y, which):
         self.output = Image_Output(self, second_col=self)
         self.output.set_color(color)
-        self.first_color_col.addWidget(self.output)
 
-        self.output_widgets.append(self.output)  # Store the output widget
+        self.output_widgets.append(self.output)
 
         if which == "first":
-            self.first_color_col.addWidget(self.output, alignment=Qt.AlignmentFlag.AlignTop)
+            self.first_color_col.insertWidget(self.first_color_col.count() - 1, self.output)
+            
         else:
-            self.second_color_col.addWidget(self.output, alignment=Qt.AlignmentFlag.AlignTop)
-
+            self.second_color_col.insertWidget(self.second_color_col.count() - 1, self.output)
+            
         for p in self.point_overlay.points:
             if p["x"] == x and p["y"] == y:
                 if which == "first":
@@ -392,7 +409,9 @@ class SecondColumn(QWidget):
         if self.switch_mode.value() == 1 and self.image_array:
             self.point_overlay.show()
             self.duped_layer.show()
+
             self.grid_overlay.hide()
+            self.grid_overlay2.hide()
 
             self.compare_title.setText("Режим точок")
 
@@ -407,7 +426,7 @@ class SecondColumn(QWidget):
             self.diff_widget.hide()
             self.sizer_widget.hide()
 
-        elif self.switch_mode.value() == 2 and self.image_array:
+        elif self.switch_mode.value() == 2 and self.image_array[0]["np_array"] is not None and self.image_array[1]["np_array"] is not None:
 
             self.compare_title.setText("Режим сітки")
 
@@ -415,8 +434,14 @@ class SecondColumn(QWidget):
             self.duped_layer.hide()
 
             self.grid_overlay.show()
-            self.grid_overlay.img_arr = self.image_array[0]["np_array"] if self.image_array else None
+            self.grid_overlay2.show()
+
+            self.grid_overlay.img_arr = self.image_array[0]["np_array"]
+            self.grid_overlay2.img_arr = self.image_array[1]["np_array"]
+
             self.grid_overlay.draw_grid(self.diff_slider.value())
+            self.grid_overlay2.draw_grid(self.diff_slider.value())
+                
 
             self.slider_widget.hide()
             self.diff_widget.show()
@@ -426,10 +451,12 @@ class SecondColumn(QWidget):
                 widget.hide()
 
         else:
-            QMessageBox.warning(self, "Попередження", "Будь ласка, додайте хоча б одне зображення в категорію перед перемиканням режимів.")
+            QMessageBox.warning(self, "Попередження", "Будь ласка, додайте 2 зображення в категорію перед перемиканням режимів.")
             self.switch_mode.blockSignals(True)
             self.switch_mode.setValue(1) 
             self.switch_mode.blockSignals(False)
+
+
 
 
 
@@ -441,6 +468,11 @@ class SecondColumn(QWidget):
         self.grid_overlay.img_arr = self.image_array[0]["np_array"]
         self.grid_overlay.draw_grid(self.diff_slider.value())
 
+        self.grid_overlay2.img_arr = self.image_array[1]["np_array"]
+        self.grid_overlay2.draw_grid(self.diff_slider.value())
+
+
+
 
 
     def resize_grid(self):
@@ -448,11 +480,21 @@ class SecondColumn(QWidget):
             return
 
         self.grid_overlay.img_arr = self.image_array[0]["np_array"]
+        self.grid_overlay2.img_arr = self.image_array[1]["np_array"]
+
         self.grid_overlay.calculate_grid()
+        self.grid_overlay2.calculate_grid()
+
         self.grid_overlay.draw_grid(self.diff_slider.value())
+        self.grid_overlay2.draw_grid(self.diff_slider.value())
+
+
 
 
     def check_images(self, x, y):
+        if self.switch_mode.value() == 2:
+            return
+
         if SelectableImageBox.path[1] is None or SelectableImageBox.path[2] is None:
             QMessageBox.warning(self, "Попередження", "Будь ласка, виберіть два зображення для порівняння.")
             return
@@ -460,6 +502,9 @@ class SecondColumn(QWidget):
         self.point_overlay.add_point(x, y)
         self.point_overlay.average_colors()
         self.duped_layer.add_point(x, y)
+
+
+
 
 
 class Image_Output(QWidget):
@@ -470,13 +515,14 @@ class Image_Output(QWidget):
         self.current_color = 70, 130, 180  # Default color (steel blue)
         
         self.color = QLabel()
+        self.color.setStyleSheet("border: 1px solid black; border-radius: 2px;")
         self.color.setFixedSize(20, 20)
         self.layout.addWidget(self.color)
         self.color.show()
 
         self.color_value = QLabel()
+        self.color_value.setStyleSheet("color: white; border: none;")
         self.layout.addWidget(self.color_value)
-        self.color.setStyleSheet("border: 1px solid black; border-radius: 2px;")
 
     def set_color(self, color):
         r, g, b = color
@@ -891,7 +937,9 @@ class Grid_Analyzer(QLabel):
         self.grid_diffs = []
         self.sizer_slider = sizer_slider
 
-    def calculate_grid(self):  
+    def calculate_grid(self): 
+        if self.img_arr is None:
+            return 
 
         h, w, _ = self.img_arr.shape
         self.math_size = math.gcd(w, h)
