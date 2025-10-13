@@ -59,6 +59,7 @@ class MainWindow(QMainWindow):
         self.cats_layout = QHBoxLayout(self.cats_frame)
         self.cats_layout.setContentsMargins(5, 5, 5, 5)
         self.cats_layout.setSpacing(10)
+        self.cats_layout.addStretch()
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
@@ -96,7 +97,7 @@ class MainWindow(QMainWindow):
 
             category.add_image_to_array.connect(self.second_col.add_image_to_array) # Connect signal to second column method
 
-            self.cats_layout.addWidget(category, alignment=Qt.AlignmentFlag.AlignLeft)
+            self.cats_layout.insertWidget(self.cats_layout.count() - 1, category)
               
 
 
@@ -170,6 +171,7 @@ class SecondColumn(QWidget):
         self.image1.setStyleSheet("border: none; background: transparent")
         self.image1.setMinimumHeight(180)
         self.image1.setMinimumWidth(320)
+
         self.image2 = QLabel()
         self.image2.setMinimumWidth(320)
         self.image2.setStyleSheet("border: none; background: transparent")
@@ -250,9 +252,14 @@ class SecondColumn(QWidget):
         self.point_overlay.send_color.connect(self.add_color)
 
 
+        self.color_title = QLabel("Координати точок")
+        self.color_title.setStyleSheet("color: #ffd500; border: none; font-size: 16px; padding: 5px 10px")
+        self.secon_layout.addWidget(self.color_title, alignment=Qt.AlignmentFlag.AlignHCenter)
+        self.color_title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+
+
         self.color_layout = QHBoxLayout()
         self.secon_layout.addLayout(self.color_layout)
-
 
 
         self.first_color_widget = QWidget()
@@ -426,7 +433,7 @@ class SecondColumn(QWidget):
             self.diff_widget.hide()
             self.sizer_widget.hide()
 
-        elif self.switch_mode.value() == 2 and self.image_array[0]["np_array"] is not None and self.image_array[1]["np_array"] is not None:
+        elif self.switch_mode.value() == 2 and len(self.image_array) > 0:
 
             self.compare_title.setText("Режим сітки")
 
