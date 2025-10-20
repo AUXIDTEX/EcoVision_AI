@@ -1,7 +1,7 @@
 # PyQt6 imports
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QLabel, QFileDialog, QFrame, QSlider, QSizePolicy, QMessageBox, QScrollArea
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtGui import QIcon, QPainter, QPen, QBrush, QColor, QIntValidator
+from PyQt6.QtGui import QIcon, QPainter, QPen, QBrush, QColor, QIntValidator, QPalette
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal
 
 # Pillow and numpy imports
@@ -17,8 +17,8 @@ import math
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Просте вікно")
-        self.setGeometry(300, 100, 1400, 900) #x, y, width, height
+        self.setWindowTitle("Порівняння зображень")
+        self.setGeometry(0, 0, 1400, 900) #x, y, width, height
         self.setWindowIcon(QIcon('radar.ico'))
         self.Main_Widget = QWidget() # Main Widget
         self.Main_layout = QHBoxLayout()
@@ -211,7 +211,7 @@ class SecondColumn(QWidget):
         self.radius_title.setStyleSheet("color: #ffd500; border: none; font-size: 13px;")
 
         self.radius_input = QLineEdit()
-        self.radius_input.setStyleSheet("border: 1px solid #808080; border-radius: 10px")
+        self.radius_input.setStyleSheet("border: 1px solid #808080; border-radius: 10px; color: white;")
         self.radius_input.setMinimumHeight(25)
         self.radius_input.setFixedWidth(50)
         self.radius_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -307,7 +307,7 @@ class SecondColumn(QWidget):
         self.diff_title_layout.addWidget(self.diff_title)
 
         self.diff_input = QLineEdit()
-        self.diff_input.setStyleSheet("border: 1px solid #808080; border-radius: 10px; font-size: 13px;")
+        self.diff_input.setStyleSheet("border: 1px solid #808080; border-radius: 10px; font-size: 13px; color: white;")
         self.diff_input.setMinimumHeight(25)
         self.diff_input.setFixedWidth(50)
         self.diff_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -343,7 +343,7 @@ class SecondColumn(QWidget):
         self.sizer_title_layout.addWidget(self.sizer_title)
 
         self.sizer_input = QLineEdit()
-        self.sizer_input.setStyleSheet("border: 1px solid #808080; border-radius: 10px; font-size: 13px;")
+        self.sizer_input.setStyleSheet("border: 1px solid #808080; border-radius: 10px; font-size: 13px; color: white;")
         self.sizer_input.setMinimumHeight(25)
         self.sizer_input.setFixedWidth(50)
         self.sizer_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -533,7 +533,7 @@ class Image_Output(QWidget):
 
     def set_color(self, color):
         r, g, b = color
-        self.color_value.setText(str(color))
+        self.color_value.setText(', '.join(str(int(c)) for c in color))
         
         self.color.setStyleSheet(f"background-color: rgb({r},{g},{b}); border: 1px solid black; border-radius: 2px;")
 
@@ -571,7 +571,7 @@ class CategoryWidget(QWidget):
         self.category_layout = QVBoxLayout(self)
 
         self.category_name = QLabel()
-        self.category_name.setStyleSheet("background-color: #3b3b3b; border-radius: 8px; padding: 0px 30px;")
+        self.category_name.setStyleSheet("background-color: #3b3b3b; border-radius: 8px; padding: 0px 30px; color: white")
         self.category_name.setText(category_name)
         self.category_name.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.category_layout.addWidget(self.category_name, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
@@ -592,10 +592,12 @@ class CategoryWidget(QWidget):
         self.Image_border_layout.addWidget(self.Image_box)
 
         self.add_image_btn = QPushButton("Додати зображення")
+        self.add_image_btn.setStyleSheet("color: white")
         self.add_image_btn.clicked.connect(self.add_image)
         self.category_layout.addWidget(self.add_image_btn, alignment=Qt.AlignmentFlag.AlignBottom)
 
         self.switch_image_btn = QPushButton("Змінити зображення")
+        self.switch_image_btn.setStyleSheet("color: white;")
         self.switch_image_btn.clicked.connect(self.switch_image)
 
 
@@ -782,7 +784,7 @@ class PointPlacer(QLabel):
         
         image1 = QLabel(self)
         image1.setFixedSize(self.radius * 2, self.radius * 2)
-        pixmap = QPixmap('holo.png')
+        pixmap = QPixmap("holo.png")
         pixmap = pixmap.scaled(self.radius*2, self.radius*2, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         image1.setPixmap(pixmap) 
         image1.setScaledContents(True)
@@ -876,8 +878,8 @@ class Duped_layer(QLabel):
 
         image1 = QLabel(self)
         image1.setFixedSize(self.radius * 2, self.radius * 2)
-        pixmap = QPixmap('holo.png')
-        pixmap = pixmap.scaled(1000, 1000, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        pixmap = QPixmap("holo.png")
+        pixmap = pixmap.scaled(self.radius * 2, self.radius* 2, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         image1.setPixmap(pixmap) 
         image1.setScaledContents(True)
         self.points.append((x, y, image1, self.radius))
@@ -999,7 +1001,7 @@ class Grid_Analyzer(QLabel):
             x_max, y_max = square["x_max"], square["y_max"]
             diff = square["diff"]
 
-            if diff > self.treshold:
+            if diff < self.treshold:
                 brush = QColor(255, 0, 0, 100)
                 painter.fillRect(
                     int(x * scale_x),
@@ -1019,7 +1021,11 @@ class Grid_Analyzer(QLabel):
         painter.end()
 
 if __name__ == "__main__":
+    palette = QPalette()
+    palette.setColor(QPalette.ColorRole.Window, QColor(35,35,35))
+
     app = QApplication([])
+    app.setPalette(palette)
     window = MainWindow()
     window.show()
     app.exec()
