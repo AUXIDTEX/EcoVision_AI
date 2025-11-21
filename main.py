@@ -1,14 +1,14 @@
-# PyQt6 imports
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QLabel, QFileDialog, QFrame, QSlider, QSizePolicy, QMessageBox, QScrollArea
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QLineEdit, QPushButton, QVBoxLayout, QLabel, QFileDialog, QFrame, QSlider, QSizePolicy, QMessageBox, QScrollArea, QComboBox
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtGui import QIcon, QPainter, QPen, QBrush, QColor, QIntValidator, QPalette
-from PyQt6.QtCore import Qt, QPoint, pyqtSignal
+from PyQt6.QtGui import QIcon, QPainter, QPen, QColor, QPalette
+from PyQt6.QtCore import Qt, pyqtSignal
 
 # Pillow and numpy imports
 from PIL import Image
-from PIL.ImageQt import ImageQt
 import numpy as np
 import math
+from run_AI import run_yolo
+import os
 
 
 
@@ -119,6 +119,7 @@ class SecondColumn(QWidget):
         self.secon_layout = QVBoxLayout(self)
         
         self.compare_widget = QWidget()
+        self.compare_widget.setFixedHeight(50)
         self.compare_widget.setStyleSheet("background-color: #2b2b2b; border-radius: 10px; border: 1px solid #808080;")
         self.compare_layout = QHBoxLayout()
         self.compare_widget.setLayout(self.compare_layout)
@@ -129,33 +130,20 @@ class SecondColumn(QWidget):
         self.compare_title.setStyleSheet("font-size: 16px; color: #ffd500; border: none;")
         self.compare_layout.addWidget(self.compare_title, alignment=Qt.AlignmentFlag.AlignRight)
 
-        
 
-        self.mode_1 = QLabel("Точки")
-        self.mode_1.setStyleSheet("color: #ffd500; border: none; font-size: 13px;")
-
-        self.mode_2 = QLabel("Сітка")
-        self.mode_2.setStyleSheet("color: #ffd500; border: none; font-size: 13px;")
-
-        self.switch_mode = QSlider()
-        self.switch_mode.setStyleSheet("border: none;")
-        self.switch_mode.setFixedSize(60, 30)
-        self.switch_mode.setOrientation(Qt.Orientation.Horizontal)
-        self.switch_mode.setMinimum(1)
-        self.switch_mode.setMaximum(2)
-        self.switch_mode.setValue(1)
-        self.switch_mode.setTickInterval(1)
-        self.switch_mode.setTickPosition(QSlider.TickPosition.NoTicks)
-        self.switch_mode.valueChanged.connect(self.switch_mode_func)
+        self.mode_selection = QComboBox()
+        self.mode_selection.addItem("Точки")
+        self.mode_selection.addItem("Сітка")
+        self.mode_selection.addItem("Нейромережа")
+        self.mode_selection.setCurrentIndex(0)
+        self.mode_selection.currentIndexChanged.connect(self.switch_mode_func)
 
         self.switch_layout = QHBoxLayout()
         self.switch_widget = QWidget()
         self.switch_widget.setStyleSheet("border: none; background-color: transparent;")
         self.switch_widget.setLayout(self.switch_layout)
 
-        self.switch_layout.addWidget(self.mode_1)
-        self.switch_layout.addWidget(self.switch_mode)
-        self.switch_layout.addWidget(self.mode_2)
+        self.switch_layout.addWidget(self.mode_selection)
 
         self.compare_layout.addWidget(self.switch_widget, alignment=Qt.AlignmentFlag.AlignRight)
 
@@ -175,8 +163,8 @@ class SecondColumn(QWidget):
         self.image2 = QLabel()
         self.image2.setMinimumWidth(320)
         self.image2.setStyleSheet("border: none; background: transparent")
-        self.image_layout.addWidget(self.image1)
-        self.image_layout.addWidget(self.image2)
+        self.image_layout.addWidget(self.image1, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.image_layout.addWidget(self.image2, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.help_overlay = QHBoxLayout()
         self.help_overlay.setContentsMargins(0, 0, 0, 0)
@@ -232,12 +220,12 @@ class SecondColumn(QWidget):
         self.radius_input.returnPressed.connect(lambda: self.radius_input.clearFocus())
 
         
-        self.point_overlay = PointPlacer(self, slider = self.radius_slider, second_column=self, mode = self.switch_mode.value())
+        self.point_overlay = PointPlacer(self, slider = self.radius_slider, second_column=self, mode = self.mode_selection.currentIndex)
         self.point_overlay.resize(self.image1.size())
         self.point_overlay.show()
 
 
-        self.duped_layer = Duped_layer(self, slider = self.radius_slider, mode = self.switch_mode.value())
+        self.duped_layer = Duped_layer(self, slider = self.radius_slider, mode = self.mode_selection.currentIndex)
         self.duped_layer.resize(self.image2.size())
         self.duped_layer.show()
 
@@ -259,7 +247,10 @@ class SecondColumn(QWidget):
 
 
         self.color_layout = QHBoxLayout()
-        self.secon_layout.addLayout(self.color_layout)
+        self.color_widget = QWidget()
+        self.color_widget.setFixedHeight(500)
+        self.color_widget.setLayout(self.color_layout)
+        self.secon_layout.addWidget(self.color_widget)
 
 
         self.first_color_widget = QWidget()
@@ -375,6 +366,13 @@ class SecondColumn(QWidget):
         self.grid_overlay2.hide()
 
 
+        self.image_box = QLabel()
+        self.image_box.hide()
+        self.image_box.setFixedSize(300, 533)
+        self.secon_layout.addWidget(self.image_box)
+        
+        self.secon_layout.addStretch()
+
 
 
     def add_image_to_array(self, file_path):
@@ -412,8 +410,14 @@ class SecondColumn(QWidget):
 
 
 
-    def switch_mode_func(self):
-        if self.switch_mode.value() == 1 and self.image_array:
+    def switch_mode_func(self, index):
+        if index == 0 and self.image_array:
+            self.image_widget.show()
+            self.color_title.show()
+            self.color_widget.show()
+
+            self.image_box.hide()
+
             self.point_overlay.show()
             self.duped_layer.show()
 
@@ -433,7 +437,12 @@ class SecondColumn(QWidget):
             self.diff_widget.hide()
             self.sizer_widget.hide()
 
-        elif self.switch_mode.value() == 2 and len(self.image_array) > 0:
+        elif index == 1 and len(self.image_array) > 0:
+            self.image_widget.show()
+            self.color_title.show()
+            self.color_widget.show()
+
+            self.image_box.hide()
 
             self.compare_title.setText("Режим сітки")
 
@@ -457,11 +466,30 @@ class SecondColumn(QWidget):
             for widget in self.output_widgets:
                 widget.hide()
 
+        elif index == 2 and self.image_array:
+            self.image_box.show()
+            
+            self.image_widget.hide()
+            self.color_title.hide()
+            self.color_widget.hide()
+
+            output_path = run_yolo(SelectableImageBox.path[1])
+
+            pixmap = QPixmap(output_path)
+            pixmap = pixmap.scaled(1200, 1200, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            self.image_box.setPixmap(pixmap)
+            self.image_box.setScaledContents(True)
+
+            current_width = window.width()
+            window.resize(current_width, 900)
+
+
+
         else:
             QMessageBox.warning(self, "Попередження", "Будь ласка, додайте 2 зображення в категорію перед перемиканням режимів.")
-            self.switch_mode.blockSignals(True)
-            self.switch_mode.setValue(1) 
-            self.switch_mode.blockSignals(False)
+            self.mode_selection.blockSignals(True)
+            self.mode_selection.setCurrentIndex(0)
+            self.mode_selection.blockSignals(False)
 
 
 
@@ -499,7 +527,7 @@ class SecondColumn(QWidget):
 
 
     def check_images(self, x, y):
-        if self.switch_mode.value() == 2:
+        if self.mode_selection.currentIndex == 1:
             return
 
         if SelectableImageBox.path[1] is None or SelectableImageBox.path[2] is None:
@@ -602,13 +630,13 @@ class CategoryWidget(QWidget):
 
 
     def add_image(self):
-        self.file_path, _ = QFileDialog.getOpenFileName(self, "Виберіть зображення", "C:\\Users\\AUXIDTEX\\Pictures", "Image Files (*.png *.jpg *.jpeg *.svg *.dng)")
+        self.file_path, _ = QFileDialog.getOpenFileName(self, "Виберіть зображення", "C:\\Users\\AUXIDTEX\\Documents\\Project Data\\Frames", "Image Files (*.png *.jpg *.jpeg *.svg *.dng)")
         if self.file_path:
 
             pixmap = QPixmap(self.file_path)
-            pixmap = pixmap.scaled(150, 300, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation) #Quality 300 x 300
+            pixmap = pixmap.scaled(200, 200, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation) #Quality 300 x 300
             self.Image_box.setPixmap(pixmap)
-            self.Image_box.setScaledContents(True)
+            self.Image_box.setFixedHeight(200)
 
             self.add_image_btn.hide() 
             self.category_layout.addWidget(self.switch_image_btn, alignment=Qt.AlignmentFlag.AlignBottom)
@@ -627,9 +655,9 @@ class CategoryWidget(QWidget):
 
 
             pixmap = QPixmap(file_path)
-            pixmap = pixmap.scaled(150, 300, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            pixmap = pixmap.scaled(200, 200, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
             self.Image_box.setPixmap(pixmap)
-            self.Image_box.setScaledContents(True)
+            self.Image_box.setFixedHeight(200)
 
             
             if index is not None:
@@ -712,13 +740,11 @@ class SelectableImageBox(QLabel):
             if SelectableImageBox.count[1] is None:
 
                 pixmap = QPixmap(self.file_path)
-                pixmap = pixmap.scaled(320, 320, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-                self.image1.setScaledContents(True)
-
-                px_ratio = pixmap.width() / pixmap.height()
-                self.image1.setFixedWidth(int(self.image1.height() * px_ratio))
-
+                pixmap = pixmap.scaled(300, 225, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                 self.image1.setPixmap(pixmap)
+                self.image1.setFixedSize(180,320)
+
+                print(self.image1.size())
 
                 SelectableImageBox.path[1] = self.file_path 
 
@@ -727,12 +753,10 @@ class SelectableImageBox(QLabel):
             elif SelectableImageBox.count[2] is None:
 
                 pixmap = QPixmap(self.file_path)
-                pixmap = pixmap.scaled(320, 320, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                pixmap = pixmap.scaled(300, 225, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                 self.image2.setPixmap(pixmap)
-                self.image2.setScaledContents(True)
+                self.image2.setFixedSize(180, 320)
 
-                px_ratio = pixmap.width() / pixmap.height()
-                self.image2.setFixedWidth(int(self.image1.height() * px_ratio))
 
                 SelectableImageBox.path[2] = self.file_path
 
@@ -779,13 +803,14 @@ class PointPlacer(QLabel):
 
 
     def add_point(self, x, y):
+        circle_path = os.path.join(os.path.dirname(__file__), "circle.png")
 
         self.radius = self.radius_slider.value()
         
         image1 = QLabel(self)
         image1.setFixedSize(self.radius * 2, self.radius * 2)
-        pixmap = QPixmap("holo.png")
-        pixmap = pixmap.scaled(self.radius*2, self.radius*2, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        pixmap = QPixmap(circle_path)
+        pixmap = pixmap.scaled(100, 100, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         image1.setPixmap(pixmap) 
         image1.setScaledContents(True)
 
@@ -802,7 +827,7 @@ class PointPlacer(QLabel):
 
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.RightButton and self.mode == 1:
+        if event.button() == Qt.MouseButton.RightButton and self.mode == 0:
             self.x, self.y = int(event.position().x()), int(event.position().y())
             self.point_added.emit(self.x, self.y)
             self.right_clicked.emit(self.x, self.y)
@@ -874,12 +899,13 @@ class Duped_layer(QLabel):
         self.radius_slider = slider
         
     def add_point(self, x, y):
+        circle_path = os.path.join(os.path.dirname(__file__), "circle.png")
         self.radius = self.radius_slider.value()
 
         image1 = QLabel(self)
         image1.setFixedSize(self.radius * 2, self.radius * 2)
-        pixmap = QPixmap("holo.png")
-        pixmap = pixmap.scaled(self.radius * 2, self.radius* 2, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        pixmap = QPixmap(circle_path)
+        pixmap = pixmap.scaled(100, 100, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         image1.setPixmap(pixmap) 
         image1.setScaledContents(True)
         self.points.append((x, y, image1, self.radius))
@@ -888,7 +914,7 @@ class Duped_layer(QLabel):
         image1.show()
 
     def delete_point(self, xp, yp):
-        if self.mode == 1:
+        if self.mode == 0:
             x, y = int(xp), int(yp)
             for px, py, img, radius in self.points:
                 if (px - x)**2 + (py - y)**2 <= radius**2:
