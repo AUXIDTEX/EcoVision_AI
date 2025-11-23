@@ -8,6 +8,7 @@ from windows.category_widget import CategoryWidget
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
         self.setWindowTitle("Порівняння зображень")
         self.setGeometry(0, 0, 1400, 900) #x, y, width, height
         self.setWindowIcon(QIcon('radar.ico'))
@@ -69,7 +70,7 @@ class MainWindow(QMainWindow):
         self.settings_widget.setLayout(self.settings_layout)
         self.settings_widget.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 8px; padding: 5px;")
 
-        self.second_col = SecondColumn(self, settings_layout = self.settings_layout)
+        self.second_col = SecondColumn(self, main_window=self, settings_layout=self.settings_layout)
         self.second_col.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.Main_layout.addWidget(self.second_col, stretch=1) 
 

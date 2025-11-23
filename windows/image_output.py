@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel
 
 
 class Image_Output(QWidget):
-    def __init__(self, parent=None, second_col=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
 
         self.layout = QHBoxLayout(self)

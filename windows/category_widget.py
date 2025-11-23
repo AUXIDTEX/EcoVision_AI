@@ -1,4 +1,5 @@
 from windows.selectable_imagebox import SelectableImageBox
+from windows.second_column import SecondColumn
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
@@ -17,6 +18,13 @@ class CategoryWidget(QWidget):
         self.image_array = second_col.image_array
         self.category_layout = QVBoxLayout(self)
 
+        self.second_column = second_col
+        self.point_overlay = second_col.point_overlay
+        self.duped_layer = second_col.duped_layer
+        self.grid_overlay = second_col.grid_overlay
+        self.grid_overlay2 = second_col.grid_overlay2
+        self.index = second_col.mode_selection.currentIndex()
+
         self.category_name = QLabel()
         self.category_name.setStyleSheet("background-color: #3b3b3b; border-radius: 8px; padding: 0px 30px; color: white")
         self.category_name.setText(category_name)
@@ -33,7 +41,19 @@ class CategoryWidget(QWidget):
         self.category_layout.addWidget(self.Image_border, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.Image_box = QLabel()
-        self.Image_box = SelectableImageBox(self.Image_border, second_column=self.image_layout, image1=image1, image2=image2)
+
+        self.Image_box = SelectableImageBox(
+            self.Image_border, 
+            second_column = self.image_layout, 
+            image1=image1, 
+            image2=image2, 
+            point_placer = self.point_overlay, 
+            duped_layer = self.duped_layer, 
+            grid_overlay = self.grid_overlay, 
+            grid_overlay2 = self.grid_overlay2,
+            index = self.index)
+        
+
         self.Image_box.setStyleSheet("border: none;")
         self.Image_box.setMinimumHeight(100)
         self.Image_border_layout.addWidget(self.Image_box)
@@ -49,7 +69,7 @@ class CategoryWidget(QWidget):
 
 
     def add_image(self):
-        self.file_path, _ = QFileDialog.getOpenFileName(self, "Виберіть зображення", "C:\\Users\\AUXIDTEX\\Documents\\Project Data\\Frames", "Image Files (*.png *.jpg *.jpeg *.svg *.dng)")
+        self.file_path, _ = QFileDialog.getOpenFileName(self, "Виберіть зображення", "/media/auxidtex/Local Disk/Project Data/ai_module/Frames/train", "Image Files (*.png *.jpg *.jpeg *.svg *.dng)")
         if self.file_path:
 
             pixmap = QPixmap(self.file_path)
@@ -67,7 +87,7 @@ class CategoryWidget(QWidget):
     def switch_image(self):
         old_path = self.file_path
 
-        file_path, _ = QFileDialog.getOpenFileName(self, "Виберіть зображення", "C:\\Users\\AUXIDTEX\\Pictures", "Image Files (*.png *.jpg *.jpeg *.tiff *.svg)")
+        file_path, _ = QFileDialog.getOpenFileName(self, "Виберіть зображення", "/media/auxidtex/Local Disk/Project Data/ai_module/Frames/train", "Image Files (*.png *.jpg *.jpeg *.tiff *.svg)")
         if file_path:
 
             index = next((i for i, item in enumerate(self.image_array) if item["path"] == old_path), None)

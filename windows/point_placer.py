@@ -108,5 +108,4 @@ class PointPlacer(QLabel):
                 avg_colors.append(avg_color)
                 self.send_color.emit(avg_color, x, y, which)  # Emit the average color
 
-        print(avg_color)
         return avg_colors

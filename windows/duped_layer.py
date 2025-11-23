@@ -17,7 +17,7 @@ class Duped_layer(QLabel):
         self.radius_slider = slider
         
     def add_point(self, x, y):
-        circle_path = os.path.join(os.path.dirname(__file__), "circle.png")
+        circle_path = os.path.join(os.path.dirname(__file__), "..", "assets", "circle.png")
         self.radius = self.radius_slider.value()
 
         image1 = QLabel(self)

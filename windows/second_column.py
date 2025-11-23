@@ -16,8 +16,10 @@ from logic.run_yolo import run_yolo
 
 
 class SecondColumn(QWidget):
-    def __init__(self, parent=None, settings_layout=None):
+    def __init__(self, parent=None, main_window = None, settings_layout = None):
         super().__init__(parent)
+
+        self.window = main_window
 
         self.image_array = []   # List to store image pixel data
         self.output_widgets = []  # List to store output widgets 
@@ -45,7 +47,9 @@ class SecondColumn(QWidget):
         self.mode_selection.addItem("Сітка")
         self.mode_selection.addItem("Нейромережа")
         self.mode_selection.setCurrentIndex(0)
+        
         self.mode_selection.currentIndexChanged.connect(self.switch_mode_func)
+        self.mode_selection.currentIndexChanged.connect(SelectableImageBox.update_index)
 
         self.switch_layout = QHBoxLayout()
         self.switch_widget = QWidget()
@@ -298,7 +302,7 @@ class SecondColumn(QWidget):
 
 
     def add_color(self, color, x, y, which):
-        self.output = Image_Output(self, second_col=self)
+        self.output = Image_Output(self)
         self.output.set_color(color)
 
         self.output_widgets.append(self.output)
@@ -320,8 +324,7 @@ class SecondColumn(QWidget):
 
 
     def switch_mode_func(self, index):
-        from main import window
-
+        print(index)
         
         if index == 0 and self.image_array:
             self.image_widget.show()
@@ -349,7 +352,7 @@ class SecondColumn(QWidget):
             self.diff_widget.hide()
             self.sizer_widget.hide()
 
-        elif index == 1 and len(self.image_array) > 0:
+        elif index == 1 and len(self.image_array) == 2:
             self.image_widget.show()
             self.color_title.show()
             self.color_widget.show()
@@ -379,11 +382,13 @@ class SecondColumn(QWidget):
                 widget.hide()
 
         elif index == 2 and self.image_array:
-            self.image_box.show()
-            
             self.image_widget.hide()
             self.color_title.hide()
             self.color_widget.hide()
+
+            self.compare_title.setText("Режим нейромережі")
+            self.image_box.show()
+            
 
             output_path = run_yolo(SelectableImageBox.path[1])
 
@@ -392,8 +397,8 @@ class SecondColumn(QWidget):
             self.image_box.setPixmap(pixmap)
             self.image_box.setScaledContents(True)
 
-            current_width = window.width()
-            window.resize(current_width, 900)
+            current_width = self.window.width()
+            self.window.resize(current_width, 900)
 
 
 
@@ -439,7 +444,7 @@ class SecondColumn(QWidget):
 
 
     def check_images(self, x, y):
-        if self.mode_selection.currentIndex == 1:
+        if self.mode_selection.currentIndex() == 1:
             return
 
         if SelectableImageBox.path[1] is None or SelectableImageBox.path[2] is None:

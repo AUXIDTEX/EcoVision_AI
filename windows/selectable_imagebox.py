@@ -6,8 +6,9 @@ from PyQt6.QtWidgets import QLabel
 class SelectableImageBox(QLabel):
     count = {1: None, 2: None}  # List for both images
     path = {1: None, 2: None}  # Dictionary to store paths for both images
+    index = 0
      
-    def __init__(self, parent=None, second_column=None, image1=None, image2=None):
+    def __init__(self, parent=None, second_column=None, image1=None, image2=None, point_placer=None, duped_layer=None, grid_overlay=None, grid_overlay2=None, index=None):
         super().__init__(parent)
         self.selected = False
         self.setStyleSheet("border: none;")
@@ -17,6 +18,12 @@ class SelectableImageBox(QLabel):
         self.frame = parent
         self.image1 = image1  # Reference to the first image in the second column
         self.image2 = image2  # Reference to the second image in the second column
+        self.index = index
+
+        self.point_placer = point_placer
+        self.duped_layer = duped_layer
+        self.grid_overlay = grid_overlay
+        self.grid_overlay2 = grid_overlay2
 
         self.image_layout = second_column # Layout for the second column where selected images will be displayed
 
@@ -27,6 +34,10 @@ class SelectableImageBox(QLabel):
 
     def mousePressEvent(self, event):
         self.selected = not self.selected
+        
+        index = SelectableImageBox.index
+        
+        print(index)
 
         if self.selected:
             self.frame.setStyleSheet("border: 2px solid #007acc;")
@@ -38,6 +49,15 @@ class SelectableImageBox(QLabel):
                 pixmap = pixmap.scaled(300, 225, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                 self.image1.setPixmap(pixmap)
                 self.image1.setFixedSize(180,320)
+
+                self.point_placer.resize(self.image1.size())
+                self.grid_overlay.resize(self.image1.size())
+
+                if index == 0:
+                    self.point_placer.show()
+                if index == 1: 
+                    self.grid_overlay.show()
+
 
                 print(self.image1.size())
 
@@ -52,6 +72,13 @@ class SelectableImageBox(QLabel):
                 self.image2.setPixmap(pixmap)
                 self.image2.setFixedSize(180, 320)
 
+                self.duped_layer.resize(self.image2.size())
+                self.grid_overlay2.resize(self.image2.size())
+
+                if index == 0:
+                    self.duped_layer.show()
+                if index == 1: 
+                    self.grid_overlay2.show()
 
                 SelectableImageBox.path[2] = self.file_path
 
@@ -62,9 +89,23 @@ class SelectableImageBox(QLabel):
             
             if SelectableImageBox.count[2] is not None and SelectableImageBox.path[2] == self.file_path:
                 self.image2.clear()
+
+                self.duped_layer.hide()
+                self.grid_overlay2.hide()
+
                 SelectableImageBox.count[2] = None
                 SelectableImageBox.path[2] = None
             else:
                 self.image1.clear()
+
+                self.point_placer.hide()
+                self.grid_overlay.hide()
+
                 SelectableImageBox.count[1] = None
                 SelectableImageBox.path[1] = None
+
+
+    @staticmethod
+    def update_index(index):
+        SelectableImageBox.index = index
+
