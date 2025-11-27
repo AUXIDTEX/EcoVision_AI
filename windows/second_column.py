@@ -369,6 +369,8 @@ class SecondColumn(QWidget):
         if index == 0 and self.image_array:
             #POINT MODE
 
+            self.ai_widget.hide()
+
             self.image_widget.show()
             self.color_title.show()
             self.color_widget.show()
@@ -396,8 +398,10 @@ class SecondColumn(QWidget):
 
             self.window.update()
 
-        elif index == 1 and len(self.image_array) == 2:
+        elif index == 1 and SelectableImageBox.path[1] is not None and SelectableImageBox.path[2] is not None:
             #GRID MODE 
+
+            self.ai_widget.hide()
 
             self.image_widget.show()
             self.color_title.show()
@@ -447,8 +451,8 @@ class SecondColumn(QWidget):
 
 
             self.info_class_name.setText(f"Classes: {self.class_name}")
-            self.info_conf.setText(f"Confidence: {self.conf} %")
-            self.info_xyxy.setText(f"Bounding Box coords:")
+            self.info_conf.setText(f"Confidence: {self.conf * 100} %")
+            self.info_xyxy.setText(f"Bounding Box cords:")
 
             self.info_x1.setText(f"  x1: {self.xyxy[0]} px")
             self.info_y1.setText(f"  y1: {self.xyxy[1]} px")
@@ -456,11 +460,12 @@ class SecondColumn(QWidget):
             self.info_y2.setText(f"  y2: {self.xyxy[3]} px")
 
             self.ai_widget.show()
+            self.ai_image_box.show()
 
             self.window.update()
 
         else:
-            QMessageBox.warning(self, "Попередження", "Будь ласка, додайте 2 зображення в категорію перед перемиканням режимів.")
+            QMessageBox.warning(self, "Попередження", "Будь ласка, виберіть два зображення для порівняння.")
             self.mode_selection.blockSignals(True)
             self.mode_selection.setCurrentIndex(0)
             self.mode_selection.blockSignals(False)
