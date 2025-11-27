@@ -108,7 +108,7 @@ class CategoryWidget(QWidget):
                                     "np_array": img_ar}  # Update the image array if path exists
 
             
-                print(len(self.image_array))
+                #print(len(self.image_array))
             
 
             if SelectableImageBox.path[1] == file_path:

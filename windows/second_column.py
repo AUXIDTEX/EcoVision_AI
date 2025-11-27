@@ -279,10 +279,48 @@ class SecondColumn(QWidget):
         self.grid_overlay2.hide()
 
 
-        self.image_box = QLabel()
-        self.image_box.hide()
-        self.image_box.setFixedSize(300, 533)
-        self.secon_layout.addWidget(self.image_box)
+        self.ai_layout = QHBoxLayout()
+        self.ai_widget = QWidget()
+        self.ai_widget.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 10px;")
+        self.ai_widget.hide()
+        self.ai_widget.setLayout(self.ai_layout)
+        self.secon_layout.addWidget(self.ai_widget)
+
+        self.ai_image_box = QLabel()
+        self.ai_image_box.setStyleSheet("border: none; background-color: transparent;")
+        self.ai_image_box.setFixedSize(300, 533)
+        self.ai_layout.addWidget(self.ai_image_box, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        self.ai_info_widget = QWidget()
+        self.ai_info_widget.setStyleSheet("background-color: transparent; border: none;")
+        self.ai_layout.addWidget(self.ai_info_widget)
+        self.ai_info_layout = QVBoxLayout()
+        self.ai_info_widget.setLayout(self.ai_info_layout)
+
+        self.info_title = QLabel("Звіт нейромережі")
+        self.ai_info_layout.addWidget(self.info_title, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+        self.info_title.setStyleSheet("color: #ffd500; font-size: 15px;")
+
+        self.info_class_name = QLabel()
+        self.info_conf = QLabel()
+        self.info_xyxy = QLabel()
+
+        self.info_x1 = QLabel()
+        self.info_y1 = QLabel()
+        self.info_x2 = QLabel()
+        self.info_y2 = QLabel()
+
+        self.ai_info_layout.addWidget(self.info_class_name, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.ai_info_layout.addWidget(self.info_conf, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.ai_info_layout.addWidget(self.info_xyxy, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        self.ai_info_layout.addWidget(self.info_x1, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.ai_info_layout.addWidget(self.info_y1, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.ai_info_layout.addWidget(self.info_x2, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.ai_info_layout.addWidget(self.info_y2, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        self.ai_info_layout.addStretch()
+
         
         self.secon_layout.addStretch()
 
@@ -324,14 +362,18 @@ class SecondColumn(QWidget):
 
 
     def switch_mode_func(self, index):
-        print(index)
-        
+        #print("img1 size:", self.image1.size(), "img2 size:", self.image2.size())
+        #print("point overlay size:", self.point_overlay.size(), "duped layer size:", self.duped_layer.size())
+        #print("grid overlay size:", self.grid_overlay.size(), "grid overlay2 size:", self.grid_overlay2.size())
+
         if index == 0 and self.image_array:
+            #POINT MODE
+
             self.image_widget.show()
             self.color_title.show()
             self.color_widget.show()
 
-            self.image_box.hide()
+            self.ai_image_box.hide()
 
             self.point_overlay.show()
             self.duped_layer.show()
@@ -352,12 +394,16 @@ class SecondColumn(QWidget):
             self.diff_widget.hide()
             self.sizer_widget.hide()
 
+            self.window.update()
+
         elif index == 1 and len(self.image_array) == 2:
+            #GRID MODE 
+
             self.image_widget.show()
             self.color_title.show()
             self.color_widget.show()
 
-            self.image_box.hide()
+            self.ai_image_box.hide()
 
             self.compare_title.setText("Режим сітки")
 
@@ -381,26 +427,37 @@ class SecondColumn(QWidget):
             for widget in self.output_widgets:
                 widget.hide()
 
+            self.window.update()
+
         elif index == 2 and self.image_array:
+            #NEURAL NETWORK MODE
+
             self.image_widget.hide()
             self.color_title.hide()
             self.color_widget.hide()
 
             self.compare_title.setText("Режим нейромережі")
-            self.image_box.show()
-            
 
-            output_path = run_yolo(SelectableImageBox.path[1])
+            output_path, self.class_name, self.conf, self.xyxy = run_yolo(SelectableImageBox.path[1])
 
             pixmap = QPixmap(output_path)
             pixmap = pixmap.scaled(1200, 1200, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-            self.image_box.setPixmap(pixmap)
-            self.image_box.setScaledContents(True)
-
-            current_width = self.window.width()
-            self.window.resize(current_width, 900)
+            self.ai_image_box.setPixmap(pixmap)
+            self.ai_image_box.setScaledContents(True)
 
 
+            self.info_class_name.setText(f"Classes: {self.class_name}")
+            self.info_conf.setText(f"Confidence: {self.conf} %")
+            self.info_xyxy.setText(f"Bounding Box coords:")
+
+            self.info_x1.setText(f"  x1: {self.xyxy[0]} px")
+            self.info_y1.setText(f"  y1: {self.xyxy[1]} px")
+            self.info_x2.setText(f"  x2: {self.xyxy[2]} px")
+            self.info_y2.setText(f"  y2: {self.xyxy[3]} px")
+
+            self.ai_widget.show()
+
+            self.window.update()
 
         else:
             QMessageBox.warning(self, "Попередження", "Будь ласка, додайте 2 зображення в категорію перед перемиканням режимів.")

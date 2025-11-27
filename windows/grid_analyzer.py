@@ -1,12 +1,14 @@
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPainter, QPen, QColor
-from PyQt6.QtWidgets import QLabel
+from PyQt6.QtWidgets import QLabel, QMessageBox
 import numpy as np
 import math
 
 
-
 class Grid_Analyzer(QLabel):
+    block_size = 0
+    warning_shown = False
+
     def __init__(self, parent=None, target_label=None, img_arr=None, mesh_arr=None, sizer_slider=None):
         super().__init__(parent)
         self.img_arr = img_arr
@@ -19,13 +21,18 @@ class Grid_Analyzer(QLabel):
         self.grid_diffs = []
         self.sizer_slider = sizer_slider
 
+        self.secon_col = parent
+
     def calculate_grid(self): 
         if self.img_arr is None:
             return 
 
         h, w, _ = self.img_arr.shape
         self.math_size = math.gcd(w, h)
+
+
         self.square_size = self.math_size // self.sizer_slider.value()
+        Grid_Analyzer.block_size = self.square_size
 
         avg_img_color = tuple(np.mean(self.img_arr, axis=(0, 1)).astype(int))
 
@@ -45,11 +52,23 @@ class Grid_Analyzer(QLabel):
                     "x": x, "y": y, "x_max": x_max, "y_max": y_max, "diff": diff
                 })
 
+
+
     def draw_grid(self, treshold):
         self.treshold = treshold
 
         if not self.grid_diffs:
             self.calculate_grid()
+
+        #if Grid_Analyzer.block_size < 20:
+        #    if not Grid_Analyzer.warning_shown:
+                #Grid_Analyzer.warning_shown = True
+                #self.secon_col.mode_selection.setCurrentIndex(0)
+                #self.grid_diffs.clear()
+
+                #QMessageBox.warning(self, "Попередження", "Розмір блоку занадто малий для аналізу сітки.")
+
+                #return
 
         self.update()
 

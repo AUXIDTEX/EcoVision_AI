@@ -36,8 +36,6 @@ class SelectableImageBox(QLabel):
         self.selected = not self.selected
         
         index = SelectableImageBox.index
-        
-        print(index)
 
         if self.selected:
             self.frame.setStyleSheet("border: 2px solid #007acc;")
@@ -46,20 +44,30 @@ class SelectableImageBox(QLabel):
             if SelectableImageBox.count[1] is None:
 
                 pixmap = QPixmap(self.file_path)
-                pixmap = pixmap.scaled(300, 225, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+
+                ratio = pixmap.size().width() / pixmap.size().height()
+                #print("Aspect Ratio of img1:", ratio)
+
+                # Adjust scaling based on aspect ratio
+                if pixmap.size().width() > pixmap.size().height():
+                    pixmap = pixmap.scaled(320, 180, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+
+                elif pixmap.size().height() > pixmap.size().width():
+                    pixmap = pixmap.scaled(180, 320, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+
                 self.image1.setPixmap(pixmap)
-                self.image1.setFixedSize(180,320)
+                self.image1.setFixedSize(pixmap.size())
 
                 self.point_placer.resize(self.image1.size())
                 self.grid_overlay.resize(self.image1.size())
+
+                self.image1.parent().update()
 
                 if index == 0:
                     self.point_placer.show()
                 if index == 1: 
                     self.grid_overlay.show()
 
-
-                print(self.image1.size())
 
                 SelectableImageBox.path[1] = self.file_path 
 
@@ -68,12 +76,24 @@ class SelectableImageBox(QLabel):
             elif SelectableImageBox.count[2] is None:
 
                 pixmap = QPixmap(self.file_path)
-                pixmap = pixmap.scaled(300, 225, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+
+                ratio = pixmap.size().width() / pixmap.size().height()
+                #print("Aspect Ratio of img2:", ratio)
+
+                # Adjust scaling based on aspect ratio
+                if pixmap.size().width() > pixmap.size().height():
+                    pixmap = pixmap.scaled(320, 180, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+
+                elif pixmap.size().height() > pixmap.size().width():
+                    pixmap = pixmap.scaled(180, 320, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+
                 self.image2.setPixmap(pixmap)
-                self.image2.setFixedSize(180, 320)
+                self.image2.setFixedSize(pixmap.size())
 
                 self.duped_layer.resize(self.image2.size())
                 self.grid_overlay2.resize(self.image2.size())
+
+                self.image2.parent().update()
 
                 if index == 0:
                     self.duped_layer.show()
