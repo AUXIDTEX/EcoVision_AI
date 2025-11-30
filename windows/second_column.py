@@ -16,6 +16,7 @@ from logic.run_yolo import run_yolo
 
 
 class SecondColumn(QWidget):
+    index = 0
     def __init__(self, parent=None, main_window = None, settings_layout = None):
         super().__init__(parent)
 
@@ -299,8 +300,9 @@ class SecondColumn(QWidget):
 
         self.info_title = QLabel("Звіт нейромережі")
         self.ai_info_layout.addWidget(self.info_title, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
-        self.info_title.setStyleSheet("color: #ffd500; font-size: 15px;")
+        self.info_title.setStyleSheet("color: #ffd500; font-size: 15px; padding-bottom: 10px; border: none;")
 
+        self.image_name = QLabel()
         self.info_class_name = QLabel()
         self.info_conf = QLabel()
         self.info_xyxy = QLabel()
@@ -310,6 +312,7 @@ class SecondColumn(QWidget):
         self.info_x2 = QLabel()
         self.info_y2 = QLabel()
 
+        self.ai_info_layout.addWidget(self.image_name, alignment=Qt.AlignmentFlag.AlignLeft)
         self.ai_info_layout.addWidget(self.info_class_name, alignment=Qt.AlignmentFlag.AlignLeft)
         self.ai_info_layout.addWidget(self.info_conf, alignment=Qt.AlignmentFlag.AlignLeft)
         self.ai_info_layout.addWidget(self.info_xyxy, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -362,12 +365,14 @@ class SecondColumn(QWidget):
 
 
     def switch_mode_func(self, index):
+        self.index = index
         #print("img1 size:", self.image1.size(), "img2 size:", self.image2.size())
         #print("point overlay size:", self.point_overlay.size(), "duped layer size:", self.duped_layer.size())
         #print("grid overlay size:", self.grid_overlay.size(), "grid overlay2 size:", self.grid_overlay2.size())
 
-        if index == 0 and self.image_array:
+        if index == 0 and SelectableImageBox.path[1] is not None and SelectableImageBox.path[2] is not None:
             #POINT MODE
+
 
             self.ai_widget.hide()
 
@@ -417,8 +422,7 @@ class SecondColumn(QWidget):
             self.grid_overlay.show()
             self.grid_overlay2.show()
 
-            self.grid_overlay.img_arr = self.image_array[0]["np_array"]
-            self.grid_overlay2.img_arr = self.image_array[1]["np_array"]
+            self.update_grid_paths()
 
             self.grid_overlay.draw_grid(self.diff_slider.value())
             self.grid_overlay2.draw_grid(self.diff_slider.value())
@@ -449,7 +453,7 @@ class SecondColumn(QWidget):
             self.ai_image_box.setPixmap(pixmap)
             self.ai_image_box.setScaledContents(True)
 
-
+            self.image_name.setText(f"Name: {SelectableImageBox.path[1].split('/')[-1]}")
             self.info_class_name.setText(f"Classes: {self.class_name}")
             self.info_conf.setText(f"Confidence: {self.conf * 100} %")
             self.info_xyxy.setText(f"Bounding Box cords:")
@@ -478,11 +482,9 @@ class SecondColumn(QWidget):
         if not self.image_array:
             return
         
+        self.update_grid_paths()
 
-        self.grid_overlay.img_arr = self.image_array[0]["np_array"]
         self.grid_overlay.draw_grid(self.diff_slider.value())
-
-        self.grid_overlay2.img_arr = self.image_array[1]["np_array"]
         self.grid_overlay2.draw_grid(self.diff_slider.value())
 
 
@@ -492,15 +494,22 @@ class SecondColumn(QWidget):
     def resize_grid(self):
         if not self.image_array:
             return
+    
+        self.update_grid_paths()
 
-        self.grid_overlay.img_arr = self.image_array[0]["np_array"]
-        self.grid_overlay2.img_arr = self.image_array[1]["np_array"]
-
-        self.grid_overlay.calculate_grid()
-        self.grid_overlay2.calculate_grid()
+        self.grid_overlay.grid_diffs.clear()
+        self.grid_overlay2.grid_diffs.clear()
 
         self.grid_overlay.draw_grid(self.diff_slider.value())
         self.grid_overlay2.draw_grid(self.diff_slider.value())
+
+
+    def update_grid_paths(self):
+        for image in self.image_array:
+            if image["path"] == SelectableImageBox.path[1]:
+                self.grid_overlay.img_arr = image["np_array"]
+            elif image["path"] == SelectableImageBox.path[2]:
+                self.grid_overlay2.img_arr = image["np_array"]
 
 
 

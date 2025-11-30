@@ -1,5 +1,5 @@
 from windows.selectable_imagebox import SelectableImageBox
-from windows.second_column import SecondColumn
+from windows.image_selected import Image_Selected
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
@@ -53,6 +53,8 @@ class CategoryWidget(QWidget):
             grid_overlay2 = self.grid_overlay2,
             index = self.index)
         
+        self.image_selection_handler = Image_Selected(self.Image_box, self.second_column)
+        
 
         self.Image_box.setStyleSheet("border: none;")
         self.Image_box.setMinimumHeight(100)
@@ -69,7 +71,7 @@ class CategoryWidget(QWidget):
 
 
     def add_image(self):
-        self.file_path, _ = QFileDialog.getOpenFileName(self, "Виберіть зображення", "/media/auxidtex/Local Disk/Project Data/ai_module/Frames/train", "Image Files (*.png *.jpg *.jpeg *.svg *.dng)")
+        self.file_path, _ = QFileDialog.getOpenFileName(self, "Виберіть зображення", "C:\\Users\\AUXIDTEX\\Pictures\\Folder", "Image Files (*.png *.jpg *.jpeg *.svg *.dng)")
         if self.file_path:
 
             pixmap = QPixmap(self.file_path)

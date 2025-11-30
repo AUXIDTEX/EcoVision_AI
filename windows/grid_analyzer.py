@@ -25,6 +25,7 @@ class Grid_Analyzer(QLabel):
 
     def calculate_grid(self): 
         if self.img_arr is None:
+            print("array is None")
             return 
 
         h, w, _ = self.img_arr.shape
@@ -77,6 +78,7 @@ class Grid_Analyzer(QLabel):
     def paintEvent(self, event):
         super().paintEvent(event)
         if not self.grid_diffs:
+            print("no grid diffs")
             return
 
         h, w, _ = self.img_arr.shape
@@ -109,5 +111,5 @@ class Grid_Analyzer(QLabel):
                 int((x_max - x) * scale_x),
                 int((y_max - y) * scale_y)
             )
-
+        print("Grid drawn")
         painter.end()

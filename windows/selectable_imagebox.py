@@ -1,4 +1,4 @@
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QLabel, QMessageBox
 
@@ -7,8 +7,9 @@ class SelectableImageBox(QLabel):
     path = {1: None, 2: None}   # Шляхи до зображень
     index = 0
 
-    def __init__(self, parent=None, second_column=None, image1=None, image2=None,
-                 point_placer=None, duped_layer=None, grid_overlay=None, grid_overlay2=None, index=None):
+    image_selected = pyqtSignal(int)
+
+    def __init__(self, parent=None, second_column=None, image1=None, image2=None, point_placer=None, duped_layer=None, grid_overlay=None, grid_overlay2=None, index=None):
         super().__init__(parent)
         self.selected = False
         self.setStyleSheet("border: none;")
@@ -44,8 +45,14 @@ class SelectableImageBox(QLabel):
             # Якщо можна вибрати нове зображення
             if SelectableImageBox.count[1] is None:
                 self._set_image(1, self.image1, self.point_placer, self.grid_overlay, 320, 180)
+
+                self.image_selected.emit(1)
+
             elif SelectableImageBox.count[2] is None:
                 self._set_image(2, self.image2, self.duped_layer, self.grid_overlay2, 320, 180)
+
+                self.image_selected.emit(2)
+
             else:
                 QMessageBox.warning(self, "Вже вибрано 2 зображення",
                                     "Можна вибрати лише два зображення одночасно.")
@@ -81,12 +88,13 @@ class SelectableImageBox(QLabel):
 
         if overlay1:
             overlay1.resize(widget.size())
-            if SelectableImageBox.index == 0:
-                overlay1.show()
+            #if SelectableImageBox.index == 0 and SelectableImageBox.count[1] is not None and SelectableImageBox.count[2] is not None:
+                #overlay1.show()
+
         if overlay2:
             overlay2.resize(widget.size())
-            if SelectableImageBox.index == 1:
-                overlay2.show()
+            #if SelectableImageBox.index == 1 and SelectableImageBox.count[1] is not None and SelectableImageBox.count[2] is not None:
+                #overlay2.show()
 
         SelectableImageBox.path[slot] = self.file_path
         SelectableImageBox.count[slot] = 1
