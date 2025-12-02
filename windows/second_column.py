@@ -134,12 +134,12 @@ class SecondColumn(QWidget):
         self.radius_input.returnPressed.connect(lambda: self.radius_input.clearFocus())
 
         
-        self.point_overlay = PointPlacer(self, slider = self.radius_slider, second_column=self, mode = self.mode_selection.currentIndex)
+        self.point_overlay = PointPlacer(self, slider = self.radius_slider, second_column=self, mode = self.mode_selection.currentIndex())
         self.point_overlay.resize(self.image1.size())
         self.point_overlay.show()
 
 
-        self.duped_layer = Duped_layer(self, slider = self.radius_slider, mode = self.mode_selection.currentIndex)
+        self.duped_layer = Duped_layer(self, slider = self.radius_slider, mode = self.mode_selection.currentIndex())
         self.duped_layer.resize(self.image2.size())
         self.duped_layer.show()
 
@@ -293,8 +293,9 @@ class SecondColumn(QWidget):
         self.ai_layout.addWidget(self.ai_image_box, alignment=Qt.AlignmentFlag.AlignLeft)
 
         self.ai_info_widget = QWidget()
+        self.ai_info_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.ai_info_widget.setStyleSheet("background-color: transparent; border: none;")
-        self.ai_layout.addWidget(self.ai_info_widget)
+        self.ai_layout.addWidget(self.ai_info_widget, 1)
         self.ai_info_layout = QVBoxLayout()
         self.ai_info_widget.setLayout(self.ai_info_layout)
 
