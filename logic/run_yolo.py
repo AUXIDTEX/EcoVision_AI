@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 
 def run_yolo(path):
-    model = YOLO("ai_module/runs/detect/12s/weights/best.pt")  # наприклад yolo11m.pt
+    model = YOLO("runs/detect/databal_small_obj_1024px_yolov8n/weights/best.pt")
     image_path = path
     results = model(image_path)
 
@@ -18,7 +18,7 @@ def run_yolo(path):
 
         for cls_idx, conf, xyxy in zip(cls_indices, confs, xyxy_coords):
             class_name = r.names[int(cls_idx)]
-            xyxy = tuple(round(float(c), 1) for c in xyxy)  # перетворюємо np.float32 -> float
+            xyxy = tuple(round(float(c), 1) for c in xyxy)  
             conf = round(float(conf), 2)
             print(class_name, conf, xyxy)
 

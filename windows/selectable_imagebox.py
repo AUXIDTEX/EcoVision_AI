@@ -8,6 +8,7 @@ class SelectableImageBox(QLabel):
     index = 0
 
     image_selected = pyqtSignal(int)
+    selection_changed = pyqtSignal()  
 
     def __init__(self, parent=None, second_column=None, image1=None, image2=None, point_placer=None, duped_layer=None, grid_overlay=None, grid_overlay2=None, index=None):
         super().__init__(parent)
@@ -88,20 +89,16 @@ class SelectableImageBox(QLabel):
 
         if overlay1:
             overlay1.resize(widget.size())
-            #if SelectableImageBox.index == 0 and SelectableImageBox.count[1] is not None and SelectableImageBox.count[2] is not None:
-                #overlay1.show()
-
+            
         if overlay2:
             overlay2.resize(widget.size())
-            #if SelectableImageBox.index == 1 and SelectableImageBox.count[1] is not None and SelectableImageBox.count[2] is not None:
-                #overlay2.show()
+            
 
         SelectableImageBox.path[slot] = self.file_path
         SelectableImageBox.count[slot] = 1
         self.frame.setStyleSheet("border: 2px solid #007acc;")
 
-
-
+        self.selection_changed.emit()  # Випустити сигнал
 
     def _clear_image(self, slot, widget, overlay1=None, overlay2=None):
         widget.clear()
@@ -113,6 +110,8 @@ class SelectableImageBox(QLabel):
         SelectableImageBox.count[slot] = None
         SelectableImageBox.path[slot] = None
         self.frame.setStyleSheet("border: none;")
+
+        self.selection_changed.emit()  # Випустити сигнал
 
 
     @staticmethod

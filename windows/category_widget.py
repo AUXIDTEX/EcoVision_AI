@@ -8,7 +8,6 @@ from PIL import Image
 import numpy as np
 
 
-
 class CategoryWidget(QWidget):
     add_image_to_array = pyqtSignal(str)
     def __init__(self, parent=None, category_name=None, second_col=None, image1=None, image2=None):
@@ -55,6 +54,8 @@ class CategoryWidget(QWidget):
         
         self.image_selection_handler = Image_Selected(self.Image_box, self.second_column)
         
+        self.Image_box.selection_changed.connect(self.second_column.spectral_filterer.set_image)  # Підключення сигналу до методу оновлення зображення
+
 
         self.Image_box.setStyleSheet("border: none;")
         self.Image_box.setMinimumHeight(100)

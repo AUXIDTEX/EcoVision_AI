@@ -12,7 +12,7 @@ from windows.grid_analyzer import Grid_Analyzer
 from windows.selectable_imagebox import SelectableImageBox
 from windows.image_output import Image_Output
 from logic.run_yolo import run_yolo
-
+from windows.spectal_filterer import SpectralFilterer
 
 
 class SecondColumn(QWidget):
@@ -47,6 +47,7 @@ class SecondColumn(QWidget):
         self.mode_selection.addItem("Точки")
         self.mode_selection.addItem("Сітка")
         self.mode_selection.addItem("Нейромережа")
+        self.mode_selection.addItem("Фільтрування зображень")
         self.mode_selection.setCurrentIndex(0)
         
         self.mode_selection.currentIndexChanged.connect(self.switch_mode_func)
@@ -325,6 +326,10 @@ class SecondColumn(QWidget):
 
         self.ai_info_layout.addStretch()
 
+        self.spectral_filterer = SpectralFilterer()
+        self.secon_layout.addWidget(self.spectral_filterer)
+        self.spectral_filterer.hide()
+
         
         self.secon_layout.addStretch()
 
@@ -376,6 +381,7 @@ class SecondColumn(QWidget):
 
 
             self.ai_widget.hide()
+            self.spectral_filterer.hide()
 
             self.image_widget.show()
             self.color_title.show()
@@ -405,9 +411,11 @@ class SecondColumn(QWidget):
             self.window.update()
 
         elif index == 1 and SelectableImageBox.path[1] is not None and SelectableImageBox.path[2] is not None:
+            self.mode = 1
             #GRID MODE 
 
             self.ai_widget.hide()
+            self.spectral_filterer.hide()
 
             self.image_widget.show()
             self.color_title.show()
@@ -439,22 +447,29 @@ class SecondColumn(QWidget):
             self.window.update()
 
         elif index == 2 and self.image_array:
+            self.mode = 2
             #NEURAL NETWORK MODE
 
             self.image_widget.hide()
             self.color_title.hide()
             self.color_widget.hide()
+            self.spectral_filterer.hide()
 
             self.compare_title.setText("Режим нейромережі")
 
-            output_path, self.class_name, self.conf, self.xyxy = run_yolo(SelectableImageBox.path[1])
+            index = 1
+            if SelectableImageBox.path[1] is None:
+                index = 2
+
+
+            output_path, self.class_name, self.conf, self.xyxy = run_yolo(SelectableImageBox.path[index])
 
             pixmap = QPixmap(output_path)
             pixmap = pixmap.scaled(1200, 1200, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
             self.ai_image_box.setPixmap(pixmap)
             self.ai_image_box.setScaledContents(True)
 
-            self.image_name.setText(f"Name: {SelectableImageBox.path[1].split('/')[-1]}")
+            self.image_name.setText(f"Name: {SelectableImageBox.path[index].split('/')[-1]}")
             self.info_class_name.setText(f"Classes: {self.class_name}")
             self.info_conf.setText(f"Confidence: {self.conf * 100} %")
             self.info_xyxy.setText(f"Bounding Box cords:")
@@ -469,10 +484,30 @@ class SecondColumn(QWidget):
 
             self.window.update()
 
+
+
+        elif index == 3 and self.image_array:
+            self.mode = 3
+            #SPECTRAL FILTERER MODE
+
+            self.image_widget.hide()
+            self.color_title.hide()
+            self.color_widget.hide()
+
+            self.ai_widget.hide()
+            self.ai_image_box.hide()
+            self.spectral_filterer.show()
+
+            self.compare_title.setText("Режим фільтрування зображень")
+            
+            self.spectral_filterer.set_image()
+
+            self.window.update()
+
         else:
             QMessageBox.warning(self, "Попередження", "Будь ласка, виберіть два зображення для порівняння.")
             self.mode_selection.blockSignals(True)
-            self.mode_selection.setCurrentIndex(0)
+            self.mode_selection.setCurrentIndex(self.mode)
             self.mode_selection.blockSignals(False)
 
 
