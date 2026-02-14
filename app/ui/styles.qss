@@ -1,0 +1,6 @@
+msg = QMessageBox()
+msg.setStyleSheet("""
+    QMessageBox{
+        background-color: black
+    }
+)
