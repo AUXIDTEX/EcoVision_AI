@@ -10,9 +10,9 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Порівняння зображень")
-        self.setGeometry(0, 0, 1400, 900) #x, y, width, height
+        self.setGeometry(0, 0, 1600, 900) #x, y, width, height
         self.setWindowIcon(QIcon('radar.ico'))
-        self.setStyleSheet("background-color: #3b3b3b; color: white; font-family: Arial; font-size: 14px;")
+        self.setStyleSheet("background-color: #1d1d1d; color: white; font-family: Arial; font-size: 14px;")
         self.Main_Widget = QWidget() # Main Widget
         self.Main_layout = QHBoxLayout()
         self.Main_layout.setContentsMargins(10, 10, 10, 10)
@@ -71,7 +71,7 @@ class MainWindow(QMainWindow):
         self.settings_widget.setLayout(self.settings_layout)
         self.settings_widget.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 8px; padding: 5px;")
 
-        self.second_col = SecondColumn(self, main_window=self, settings_layout=self.settings_layout)
+        self.second_col = SecondColumn(self, main_window=self, settings_layout=self.settings_layout, settings_widget=self.settings_widget)
         self.second_col.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.Main_layout.addWidget(self.second_col, stretch=1) 
 
