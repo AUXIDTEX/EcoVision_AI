@@ -6,6 +6,7 @@ class SelectableImageBox(QLabel):
     count = {1: None, 2: None}  # Вибрані зображення
     path = {1: None, 2: None}   # Шляхи до зображень
     index = 0
+    instances = []
 
     image_selected = pyqtSignal(int)
     selection_changed = pyqtSignal()  
@@ -28,6 +29,7 @@ class SelectableImageBox(QLabel):
         self.grid_overlay2 = grid_overlay2
 
         self.image_layout = second_column
+        SelectableImageBox.instances.append(self)
 
         
 
@@ -117,3 +119,16 @@ class SelectableImageBox(QLabel):
     @staticmethod
     def update_index(index):
         SelectableImageBox.index = index
+
+    @staticmethod
+    def reset_selection_state():
+        SelectableImageBox.count[1] = None
+        SelectableImageBox.count[2] = None
+        SelectableImageBox.path[1] = None
+        SelectableImageBox.path[2] = None
+
+        for instance in SelectableImageBox.instances:
+            instance.selected = False
+            if instance.frame is not None:
+                instance.frame.setStyleSheet("border: none;")
+            instance.selection_changed.emit()
