@@ -2,12 +2,12 @@ import os
 import re
 
 # Налаштування
-labels_path = "ai_module/dataset/labels/val/" 
+labels_path = "/media/auxidtex/Local Disk/Project Data/ai_module/dataset/labels/val" 
 start_frame_num = 65  # Починати з frame_42
 
 def safe_remap(path, start_num):
     # Словник заміни: '0' -> '3', '1' -> '4'
-    mapping = {'0': '3', '1': '4'}
+    mapping = {'3': '4', '4': '3'}
     
     files = [f for f in os.listdir(path) if f.endswith('.txt')]
     count = 0

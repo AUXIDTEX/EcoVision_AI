@@ -1,51 +1,46 @@
 import os
+import re
 from pathlib import Path
 
+def get_file_number(path):
+    # Шукає число в назві файлу
+    match = re.search(r'(\d+)', path.name)
+    return int(match.group(1)) if match else 0
+
 def rename_images_sequential(folder_path, prefix="frame", start=1):
-    """
-    Перейменовує всі зображення у папці послідовно
-    
-    Args:
-        folder_path: шлях до папки з картинками
-        prefix: префікс для імені (за замовчуванням "frame")
-        start: з якого номера починати (за замовчуванням 1)
-    """
     folder = Path(folder_path)
     
     if not folder.exists():
         print(f"❌ Папка не існує: {folder_path}")
         return
     
-    # Розширення зображень
     image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp', '.txt'}
     
-    # Знаходимо всі зображення
-    images = sorted([f for f in folder.iterdir() 
-                     if f.is_file() and f.suffix.lower() in image_extensions])
+    # КЛЮЧОВИЙ МОМЕНТ: Сортуємо за числом у назві, а не за алфавітом
+    all_files = [f for f in folder.iterdir() if f.is_file() and f.suffix.lower() in image_extensions]
+    files = sorted(all_files, key=get_file_number)
     
-    if not images:
-        print(f"⚠️ Не знайдено зображень у папці")
+    if not files:
+        print(f"⚠️ Не знайдено файлів у папці")
         return
     
-    print(f"✓ Знайдено {len(images)} зображень")
+    print(f"✓ Знайдено {len(files)} файлів. Сортування за числами виконано.")
     
-    # Перейменовуємо у дві фази (щоб уникнути конфліктів імен)
     temp_names = []
+    # Фаза 1: Тимчасові імена (щоб не перезаписати існуючі)
+    for i, file in enumerate(files):
+        temp_name = folder / f"temp_{i}{file.suffix}"
+        file.rename(temp_name)
+        temp_names.append((temp_name, file.suffix))
     
-    # Фаза 1: тимчасові імена
-    for i, img in enumerate(images):
-        temp_name = folder / f"temp_{i}{img.suffix}"
-        img.rename(temp_name)
-        temp_names.append((temp_name, img.suffix))
-    
-    # Фаза 2: фінальні імена
-    for i, (temp_img, ext) in enumerate(temp_names, start=start):
+    # Фаза 2: Фінальні імена
+    for i, (temp_file, ext) in enumerate(temp_names, start=start):
         new_name = folder / f"{prefix}_{i}{ext}"
-        temp_img.rename(new_name)
-        print(f"{prefix}_{i}{ext}")
+        temp_file.rename(new_name)
+        print(f"Перейменовано: {temp_file.name} -> {new_name.name}")
     
-    print(f"\n✓ Готово! Перейменовано {len(images)} файлів")
+    print(f"\n✓ Готово! Перейменовано {len(files)} файлів.")
 
 # Використання
-folder_path = "/media/auxidtex/Local Disk/Project Data/ai_module/small_dataset_13_02_26/dataset/labels/train"
-rename_images_sequential(folder_path, prefix="frame", start=234)
+folder_path = "/media/auxidtex/Local Disk/Project Data/ai_module/Frames/packet1/temp"
+rename_images_sequential(folder_path, prefix="frame", start=65)

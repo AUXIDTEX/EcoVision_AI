@@ -2,8 +2,8 @@ import os
 import shutil
 
 # Шляхи
-images_folder = "ai_module/dataset/images/val"
-labels_folder = "ai_module/dataset/labels/val"
+images_folder = "/media/auxidtex/Local Disk/Project Data/ai_module/Frames/packet1/temp"
+labels_folder = "/home/auxidtex/Завантажене/project-9-at-2026-02-14-13-39-4a3084ba/labels"
 bad_folder = "bad folder"
 
 os.makedirs(bad_folder, exist_ok=True)
