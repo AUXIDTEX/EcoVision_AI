@@ -12,6 +12,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Порівняння зображень")
         self.setGeometry(0, 0, 1400, 900) #x, y, width, height
         self.setWindowIcon(QIcon('radar.ico'))
+        self.setStyleSheet("background-color: #3b3b3b; color: white; font-family: Arial; font-size: 14px;")
         self.Main_Widget = QWidget() # Main Widget
         self.Main_layout = QHBoxLayout()
         self.Main_layout.setContentsMargins(10, 10, 10, 10)

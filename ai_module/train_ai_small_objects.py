@@ -3,7 +3,7 @@ from ultralytics import YOLO
 
 torch.cuda.empty_cache()
 
-model = YOLO("yolov8n.pt")
+model = YOLO("models/yolo12n.pt")
 
 # Навчання
 model.train(
@@ -13,7 +13,9 @@ model.train(
     batch=24,       
     workers=4,
     device="0",
-    patience = 20,
+    patience = 40,
+
+    #cos_lr=True,
 
     box=7.5,
     cls=1.5,
