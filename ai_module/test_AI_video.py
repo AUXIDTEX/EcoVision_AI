@@ -3,7 +3,7 @@ import glob
 import os
 import cv2
 
-model = YOLO("/media/auxidtex/Local Disk/Project Data/runs/detect/databal_weights_640px_yolov8n/weights/best.pt")  
+model = YOLO("/media/auxidtex/Local Disk/Project Data/app/assets/Tree_disseses_finder.pt")  
 
 save_dir = "output_images"
 os.makedirs(save_dir, exist_ok=True)
