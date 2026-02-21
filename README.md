@@ -26,7 +26,7 @@ The model detects 5 classes:
 
 ## Current Model Metrics
 
-Based on the provided validation results:
+Based on the validation results:
 
 - `mAP@0.5 (all classes)`: **0.738**
 - `F1 max (all classes)`: **0.72** at `confidence=0.356`
@@ -99,7 +99,7 @@ py -3 app/logic/run_yolo.py "path\to\image.jpg"
 ```
 
 The script returns JSON to `stdout`:
-- `ok`
+- `inference/preprocess/postprocess speed`
 - `output_path`
 - `detections[]` (`class_name`, `conf`, `xyxy`)
 
@@ -115,8 +115,8 @@ For tests and batch processing, use:
 
 Training scripts:
 
+- `ai_module/train_ai_small_objects.py -- Recommended` 
 - `ai_module/train_AI.py`
-- `ai_module/train_ai_small_objects.py`
 
 Typical project parameters:
 
