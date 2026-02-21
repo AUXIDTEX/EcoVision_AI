@@ -1,9 +1,9 @@
 from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QFrame, QSizePolicy, QLineEdit, QPushButton, QScrollArea
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QFont
 
-from windows.second_column import SecondColumn
-from windows.category_widget import CategoryWidget
+from modules.second_column import SecondColumn
+from modules.category_widget import CategoryWidget
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -11,8 +11,9 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Порівняння зображень")
         self.setGeometry(0, 0, 1600, 900) #x, y, width, height
-        self.setWindowIcon(QIcon('radar.ico'))
-        self.setStyleSheet("background-color: #1d1d1d; color: white; font-family: Arial; font-size: 14px;")
+        self.setWindowIcon(QIcon('app/assets/radar.ico'))
+        self.setStyleSheet("background-color: #1d1d1d; color: white;")
+        self.setFont(QFont("Arial", 14))
         self.Main_Widget = QWidget() # Main Widget
         self.Main_layout = QHBoxLayout()
         self.Main_layout.setContentsMargins(10, 10, 10, 10)
@@ -58,7 +59,7 @@ class MainWindow(QMainWindow):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll_area.setMinimumHeight(300)
+        self.scroll_area.setMinimumHeight(350)
         self.scroll_area.setMaximumHeight(400)
 
         self.scroll_area.setWidget(self.cats_frame)

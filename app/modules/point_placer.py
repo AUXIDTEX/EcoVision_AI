@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QLabel
 import os
 
 from logic.average_color import Average_color
-from windows.selectable_imagebox import SelectableImageBox
+from modules.selectable_imagebox import SelectableImageBox
 
 
 class PointPlacer(QLabel):
@@ -40,6 +40,7 @@ class PointPlacer(QLabel):
         image1.setScaledContents(True)
 
         self.points.append({
+            "number": len(self.points) + 1,
             "x": x,
             "y": y,
             "image": image1, 
@@ -76,6 +77,7 @@ class PointPlacer(QLabel):
                         point["label_second"].deleteLater()
 
                     self.points.remove(point)
+                    self.second_column.renumber_point_outputs()
                     break
 
         else:

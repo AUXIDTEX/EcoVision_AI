@@ -10,14 +10,14 @@ from PyQt6.QtGui import QPixmap
 from PIL import Image
 import numpy as np
 
-from windows.clickable_label import ClickableLabel
-from windows.point_placer import PointPlacer
-from windows.duped_layer import Duped_layer
-from windows.grid_analyzer import Grid_Analyzer
-from windows.selectable_imagebox import SelectableImageBox
-from windows.image_output import Image_Output
-from windows.spectal_filterer import SpectralFilterer
-
+from modules.clickable_label import ClickableLabel
+from modules.point_placer import PointPlacer
+from modules.duped_layer import Duped_layer
+from modules.grid_analyzer import Grid_Analyzer
+from modules.selectable_imagebox import SelectableImageBox
+from modules.image_output import Image_Output
+from modules.spectal_filterer import SpectralFilterer
+from modules.change_modes import switch_modes
 
 class SecondColumn(QWidget):
     index = 0
@@ -200,6 +200,9 @@ class SecondColumn(QWidget):
         
         self.color_layout.addWidget(self.first_scroll)
         self.color_layout.addWidget(self.second_scroll)
+        self._syncing_color_scroll = False
+        self.first_scroll.verticalScrollBar().valueChanged.connect(self.sync_color_scroll_from_first)
+        self.second_scroll.verticalScrollBar().valueChanged.connect(self.sync_color_scroll_from_second)
 
 
 
@@ -530,6 +533,20 @@ class SecondColumn(QWidget):
                 "background-color: #505050; border-top-right-radius: 8px; border-bottom-right-radius: 8px; border-top-left-radius: 0px; border-bottom-left-radius: 0px; color: white; border: 1px solid #808080;"
             )
 
+    def sync_color_scroll_from_first(self, value):
+        if self._syncing_color_scroll:
+            return
+        self._syncing_color_scroll = True
+        self.second_scroll.verticalScrollBar().setValue(value)
+        self._syncing_color_scroll = False
+
+    def sync_color_scroll_from_second(self, value):
+        if self._syncing_color_scroll:
+            return
+        self._syncing_color_scroll = True
+        self.first_scroll.verticalScrollBar().setValue(value)
+        self._syncing_color_scroll = False
+
     def clear_ai_file_report(self):
         self.ai_image_box.clear()
         self.image_name.setText("")
@@ -791,8 +808,12 @@ class SecondColumn(QWidget):
         self.start_next_ai_folder_item()
 
     def add_color(self, color, x, y, which):
+        # average_colors() always emits color for the last added point
+        current_point = self.point_overlay.points[-1] if self.point_overlay.points else None
+        number = current_point.get("number", 1) if current_point else 1
+
         self.output = Image_Output(self)
-        self.output.set_color(color)
+        self.output.set_color(color, str(number))
 
         self.output_widgets.append(self.output)
 
@@ -802,166 +823,46 @@ class SecondColumn(QWidget):
         else:
             self.second_color_col.insertWidget(self.second_color_col.count() - 1, self.output)
             
-        for p in self.point_overlay.points:
-            if p["x"] == x and p["y"] == y:
-                if which == "first":
-                    p["label_first"] = self.output
-                else:
-                    p["label_second"] = self.output
-                break
+        if current_point:
+            if which == "first":
+                current_point["label_first"] = self.output
+            else:
+                current_point["label_second"] = self.output
+
+    def renumber_point_outputs(self):
+        for idx, point in enumerate(self.point_overlay.points, start=1):
+            point["number"] = idx
+
+            if point.get("label_first"):
+                point["label_first"].set_number(str(idx))
+
+            if point.get("label_second"):
+                point["label_second"].set_number(str(idx))
 
 
 
     def switch_mode_func(self, index):
-        self.index = index
-        mode_changed = index != self.mode
-        if self.mode == 2 and index != 2:
-            self.stop_ai_inference()
-            self.stop_ai_folder_processing()
-        #print("img1 size:", self.image1.size(), "img2 size:", self.image2.size())
-        #print("point overlay size:", self.point_overlay.size(), "duped layer size:", self.duped_layer.size())
-        #print("grid overlay size:", self.grid_overlay.size(), "grid overlay2 size:", self.grid_overlay2.size())
-
-        if index == 0 and self.image_array:
-            self.mode = 0
-            #POINT MODE
-
-            if mode_changed:
-                self.clear_selected_images()
-
-            self.vertical_ai_widget.hide()
-            self.spectral_filterer.hide()
-
-            self.image_widget.show()
-            self.color_title.show()
-            self.color_widget.show()
-
-            self.ai_image_box.hide()
-
-            self.point_overlay.show()
-            self.duped_layer.show()
-
-            self.grid_overlay.hide()
-            self.grid_overlay2.hide()
-
-            self.compare_title.setText("Режим точок")
-
-            for widget in self.output_widgets:
-                widget.show()
-            
-            for frame in self.mesh_arr:
-                frame.deleteLater()
-            self.mesh_arr.clear()
-
-            self.settings_widget.show()
-
-            self.slider_widget.show()
-            self.diff_widget.hide()
-            self.sizer_widget.hide()
-
-            self.window.update()
-
-        elif index == 1 and self.image_array:
-            self.mode = 1
-            #GRID MODE 
-
-            if mode_changed:
-                self.clear_selected_images()
-
-            self.vertical_ai_widget.hide()
-            self.spectral_filterer.hide()
-
-            self.image_widget.show()
-            self.color_title.show()
-            self.color_widget.show()
-
-            self.ai_image_box.hide()
-
-            self.compare_title.setText("Режим сітки")
-
-            self.point_overlay.hide()
-            self.duped_layer.hide()
-
-            self.grid_overlay.show()
-            self.grid_overlay2.show()
-
-            self.update_grid_paths()
-
-            self.grid_overlay.draw_grid(self.diff_slider.value())
-            self.grid_overlay2.draw_grid(self.diff_slider.value())
-                
-            self.settings_widget.show()
-
-            self.slider_widget.hide()
-            self.diff_widget.show()
-            self.sizer_widget.show()
-
-            for widget in self.output_widgets:
-                widget.hide()
-
-            self.window.update()
-
-        elif index == 2 and self.image_array:
-            self.mode = 2
-            #NEURAL NETWORK MODE
-
-            self.image_widget.hide()
-            self.color_title.hide()
-            self.color_widget.hide()
-            self.spectral_filterer.hide()
-
-            self.compare_title.setText("Режим нейромережі")
-
-            self.settings_widget.hide()
-
-            self.vertical_ai_widget.show()
-            self.mode_switch_func("1" if self.file_mode_label.isChecked() else "2")
-
-            if self.file_mode_label.isChecked():
-                index = 1
-                if SelectableImageBox.path[1] is None:
-                    index = 2
-                self.start_ai_inference(SelectableImageBox.path[index])
-                self.ai_image_box.show()
-
-            self.window.update()
-
-
-
-        elif index == 3 and self.image_array:
-            self.mode = 3
-            #SPECTRAL FILTERER MODE
-
-            if mode_changed:
-                self.clear_selected_images()
-
-            self.image_widget.hide()
-            self.color_title.hide()
-            self.color_widget.hide()
-
-            self.vertical_ai_widget.hide()
-            self.ai_image_box.hide()
-            self.spectral_filterer.show()
-
-            self.settings_widget.hide()
-
-            self.compare_title.setText("Режим фільтрування зображень")
-            
-            self.spectral_filterer.set_image()
-
-            self.window.update()
-
-        else:
-            QMessageBox.warning(self, "Попередження", "Будь ласка, виберіть два зображення для порівняння.")
-            self.mode_selection.blockSignals(True)
-            self.mode_selection.setCurrentIndex(self.mode)
-            self.mode_selection.blockSignals(False)
+        switch_modes(self, index)
 
 
     def clear_selected_images(self):
         SelectableImageBox.reset_selection_state()
         self.image1.clear()
         self.image2.clear()
+
+        for point in self.point_overlay.points:
+            point["image"].deleteLater()
+            if point.get("label_first"):
+                point["label_first"].deleteLater()
+            if point.get("label_second"):
+                point["label_second"].deleteLater()
+
+        for _x, _y, image, _radius in self.duped_layer.points:
+            image.deleteLater()
+
+        self.point_overlay.points.clear()
+        self.duped_layer.points.clear()
+        self.output_widgets.clear()
 
         self.grid_overlay.grid_diffs.clear()
         self.grid_overlay2.grid_diffs.clear()
