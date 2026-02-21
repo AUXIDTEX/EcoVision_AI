@@ -60,7 +60,7 @@ app/
   logic/
     run_yolo.py               # YOLO inference + JSON output
     average_color.py          # average color calculation
-  windows/
+  modules/
     main_window.py            # main window
     second_column.py          # core mode logic
     grid_analyzer.py          # grid-based analysis

@@ -3,7 +3,7 @@ import re
 
 # Налаштування
 labels_path = "/media/auxidtex/Local Disk/Project Data/ai_module/dataset/labels/val" 
-start_frame_num = 65  # Починати з frame_42
+start_frame_num = 65  
 
 def safe_remap(path, start_num):
     # Словник заміни: '0' -> '3', '1' -> '4'
@@ -13,7 +13,7 @@ def safe_remap(path, start_num):
     count = 0
 
     for file_name in files:
-        # Витягуємо номер з назви файлу frame_XXX.txt
+        
         match = re.search(r'(\d+)', file_name)
         if match:
             current_num = int(match.group(1))
@@ -31,11 +31,11 @@ def safe_remap(path, start_num):
                 if not parts:
                     continue
                 
-                # Міняємо ТІЛЬКИ перший елемент (клас), якщо він є в словнику
+                
                 if parts[0] in mapping:
                     parts[0] = mapping[parts[0]]
                 
-                # Збираємо рядок назад з ідеальною точністю координат
+               
                 new_lines.append(" ".join(parts) + "\n")
             
             with open(file_path, 'w') as f:

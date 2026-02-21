@@ -16,6 +16,6 @@ model.train(
     patience = 20,
     augment = True,
     
-    # Optimizer
+    
     optimizer='AdamW',
 )
