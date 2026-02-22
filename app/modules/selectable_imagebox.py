@@ -31,6 +31,9 @@ class SelectableImageBox(QLabel):
         self.image_layout = second_column
         SelectableImageBox.instances.append(self)
 
+
+        
+
         
 
     def set_image_path(self, file_path):

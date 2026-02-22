@@ -111,7 +111,7 @@ def switch_modes(second_column, index):
 
 
 
-        elif index == 2 and second_column.image_array:
+        elif index == 2:
             second_column.mode = 2
             #NEURAL NETWORK MODE
 
@@ -126,13 +126,22 @@ def switch_modes(second_column, index):
 
             ai.vertical_ai_widget.show()
             ai.mode_switch_func("1" if ai.file_mode_label.isChecked() else "2")
+            ai.ai_image_box.show()
 
             if ai.file_mode_label.isChecked():
-                index = 1
-                if SelectableImageBox.path[1] is None:
-                    index = 2
-                ai.start_ai_inference(SelectableImageBox.path[index])
-                ai.ai_image_box.show()
+                ai.preview_button.show()
+            else:
+                ai.preview_button.hide()
+            
+            #if ai.file_mode_label.isChecked():
+             #   index = 1
+            #    if SelectableImageBox.path[1] is None:
+            #        index = 2
+            #    ai.start_ai_inference(SelectableImageBox.path[index])
+            #    ai.ai_image_box.show()
+
+            if not ai.ai_image_box.isVisible():
+                ai.preview_button.hide()
 
             second_column.window.update()
 

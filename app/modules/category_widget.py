@@ -89,6 +89,9 @@ class CategoryWidget(QWidget):
         self.delete_category_button.clicked.connect(self.delete_category)
 
 
+        self.Image_box.image_selected.connect(self.second_column.ai_module.select_image)
+
+
 
     def add_image(self):
         self.file_path, _ = QFileDialog.getOpenFileName(self, "Виберіть зображення", "C:\\Users\\AUXIDTEX\\Pictures\\Folder", "Image Files (*.png *.jpg *.jpeg *.svg *.dng)")

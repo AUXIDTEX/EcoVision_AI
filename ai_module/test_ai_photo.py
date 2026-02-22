@@ -4,12 +4,12 @@ import os
 import cv2
 
 
-#model = YOLO("D:/Project Data/app/assets/Tree_disseses_finder.pt")
-model = YOLO("/workspace/app/assets/Tree_disseses_finder.pt")
+model = YOLO("D:/Project Data/app/assets/Tree_disseses_finder.pt")
+#model = YOLO("/workspace/app/assets/Tree_disseses_finder.pt")
 
 
-#input_path = "D:/Project Data/test_images/frame_101.jpg" # Шлях до картинки
-input_path = "/workspace/test_images/frame_101.jpg" # Шлях до картинки
+input_path = "D:/Project Data/ai_module/Frames/packet1/train/frame_124.jpg" # Шлях до картинки
+#input_path = "/workspace/test_imag/frame_101.jpg" # Шлях до картинки
 
 save_dir = "output_images"
 os.makedirs(save_dir, exist_ok=True)
@@ -19,7 +19,7 @@ if not os.path.exists(input_path):
     print(f"Помилка: Файл {input_path} не знайдено.")
 else:
     
-    results = model(input_path, device='0')
+    results = model(input_path, device='cpu')
 
     for i, r in enumerate(results):
         res_plotted = r.plot()
