@@ -4,12 +4,14 @@ from PyQt6.QtWidgets import QMessageBox
 def switch_modes(second_column, index):
         second_column.index = index
 
+        ai = second_column.ai_module
+
 
 
         mode_changed = index != second_column.mode
         if second_column.mode == 2 and index != 2:
-            second_column.stop_ai_inference()
-            second_column.stop_ai_folder_processing()
+            ai.stop_ai_inference()
+            ai.stop_ai_folder_processing()
 
 
 
@@ -22,14 +24,14 @@ def switch_modes(second_column, index):
             if mode_changed:
                 second_column.clear_selected_images()
 
-            second_column.vertical_ai_widget.hide()
+            ai.vertical_ai_widget.hide()
             second_column.spectral_filterer.hide()
 
             second_column.image_widget.show()
             second_column.color_title.show()
             second_column.color_widget.show()
 
-            second_column.ai_image_box.hide()
+            ai.ai_image_box.hide()
 
 
             second_column.grid_overlay.hide()
@@ -71,14 +73,14 @@ def switch_modes(second_column, index):
             if mode_changed:
                 second_column.clear_selected_images()
 
-            second_column.vertical_ai_widget.hide()
+            ai.vertical_ai_widget.hide()
             second_column.spectral_filterer.hide()
 
             second_column.image_widget.show()
             second_column.color_title.show()
             second_column.color_widget.show()
 
-            second_column.ai_image_box.hide()
+            ai.ai_image_box.hide()
 
             second_column.compare_title.setText("Режим сітки")
 
@@ -122,15 +124,15 @@ def switch_modes(second_column, index):
 
             second_column.settings_widget.hide()
 
-            second_column.vertical_ai_widget.show()
-            second_column.mode_switch_func("1" if second_column.file_mode_label.isChecked() else "2")
+            ai.vertical_ai_widget.show()
+            ai.mode_switch_func("1" if ai.file_mode_label.isChecked() else "2")
 
-            if second_column.file_mode_label.isChecked():
+            if ai.file_mode_label.isChecked():
                 index = 1
                 if SelectableImageBox.path[1] is None:
                     index = 2
-                second_column.start_ai_inference(SelectableImageBox.path[index])
-                second_column.ai_image_box.show()
+                ai.start_ai_inference(SelectableImageBox.path[index])
+                ai.ai_image_box.show()
 
             second_column.window.update()
 
@@ -149,8 +151,8 @@ def switch_modes(second_column, index):
             second_column.color_title.hide()
             second_column.color_widget.hide()
 
-            second_column.vertical_ai_widget.hide()
-            second_column.ai_image_box.hide()
+            ai.vertical_ai_widget.hide()
+            ai.ai_image_box.hide()
             second_column.spectral_filterer.show()
 
             second_column.settings_widget.hide()

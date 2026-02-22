@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QSizePolicy
 class Image_Output(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 8px;")
 
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -14,18 +15,19 @@ class Image_Output(QWidget):
         self.number_label = QLabel()
         self.number_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         #self.number_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
-        self.number_label.setFixedWidth(28)
-        self.number_label.setStyleSheet("color: white; border: none;")
+        self.number_label.setFixedWidth(35)
+        self.number_label.setStyleSheet("color: white; border: none; font-size: 14px;")
+        self.number_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  
         self.layout.addWidget(self.number_label)
         
         self.color = QLabel()
         self.color.setStyleSheet("border: 1px solid black; border-radius: 2px;")
-        self.color.setFixedSize(20, 20)
+        self.color.setFixedSize(30, 30)
         self.layout.addWidget(self.color)
         self.color.show()
 
         self.color_value = QLabel()
-        self.color_value.setStyleSheet("color: white; border: none;")
+        self.color_value.setStyleSheet("color: white; border: none; font-size: 14px;")
         self.layout.addWidget(self.color_value)
 
         #self.layout.addStretch()
