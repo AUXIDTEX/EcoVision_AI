@@ -3,9 +3,9 @@ import os
 import sys
 import time
 
-from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QWidget, QComboBox, QSizePolicy, QLineEdit, QSlider, QScrollArea, QMessageBox, QProgressBar, QPushButton, QButtonGroup, QFileDialog, QFrame
-from PyQt6.QtCore import Qt, QProcess
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QWidget, QComboBox, QSizePolicy, QLineEdit, QSlider, QScrollArea, QMessageBox, QPushButton
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QIcon
 
 from PIL import Image
 import numpy as np
@@ -19,6 +19,7 @@ from modules.image_output import Image_Output
 from modules.spectal_filterer import SpectralFilterer
 from modules.change_modes import switch_modes
 from modules.ai_module import AI_Module
+from modules.mode_exporter import export_by_mode
 
 class SecondColumn(QWidget):
     index = 0
@@ -40,9 +41,17 @@ class SecondColumn(QWidget):
         self.compare_widget = QWidget()
         self.compare_widget.setFixedHeight(50)
         self.compare_widget.setStyleSheet("background-color: #2b2b2b; border-radius: 10px; border: 1px solid #808080;")
+
+        self.top_bar_layout = QHBoxLayout()
+        self.top_bar_widget = QWidget()
+        self.top_bar_widget.setLayout(self.top_bar_layout)
+        self.top_bar_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.secon_layout.addWidget(self.top_bar_widget)
+
         self.compare_layout = QHBoxLayout()
         self.compare_widget.setLayout(self.compare_layout)
-        self.secon_layout.addWidget(self.compare_widget)
+        self.top_bar_layout.addWidget(self.compare_widget)
 
         self.compare_title = QLabel("Режим точок")
         self.compare_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -290,7 +299,7 @@ class SecondColumn(QWidget):
         self.help_overlay2.addWidget(self.grid_overlay2)
         self.grid_overlay2.hide()
 
-        self.spectral_filterer = SpectralFilterer()
+        self.spectral_filterer = SpectralFilterer(self)
         self.secon_layout.addWidget(self.spectral_filterer)
         self.spectral_filterer.hide()
 
@@ -299,8 +308,25 @@ class SecondColumn(QWidget):
         self.secon_layout.addWidget(self.ai_module.vertical_ai_widget)
 
 
+        self.export_button = QPushButton("Експортувати")
+        self.export_button.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 10px; font-size: 13px; color: white;")
+        self.export_button.setMinimumHeight(36)
+        self.export_button.clicked.connect(self.export_current_mode)
+        self.secon_layout.addWidget(self.export_button)
+
+
+        self.settings_button = QPushButton()
+        self.settings_button.setIcon(QIcon("app/assets/settings.png"))
+        self.settings_button.setIconSize(QSize(30, 30))
+        self.settings_button.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 10px; font-size: 13px; color: white;")
+        self.settings_button.setFixedSize(self.compare_widget.height(), self.compare_widget.height())
+        self.settings_button.clicked.connect(self.open_settings_dialog)
+        self.top_bar_layout.addWidget(self.settings_button)
+
+
         
         self.secon_layout.addStretch()
+        self.apply_language("uk")
 
 
 
@@ -371,6 +397,49 @@ class SecondColumn(QWidget):
 
     def switch_mode_func(self, index):
         switch_modes(self, index)
+
+    def export_current_mode(self):
+        export_by_mode(self)
+
+    def open_settings_dialog(self):
+        manager = getattr(self.window, "settings_manager", None)
+        if manager is not None:
+            manager.open_settings_dialog(self)
+
+    def get_text(self, key):
+        if self.window and hasattr(self.window, "get_text"):
+            return self.window.get_text(key)
+        return key
+
+    def update_compare_title(self):
+        title_map = {
+            0: self.get_text("compare_points"),
+            1: self.get_text("compare_grid"),
+            2: self.get_text("compare_ai"),
+            3: self.get_text("compare_spectral"),
+        }
+        self.compare_title.setText(title_map.get(self.mode, self.get_text("compare_points")))
+
+    def apply_language(self, language):
+        self.mode_selection.blockSignals(True)
+        self.mode_selection.setItemText(0, self.get_text("mode_points"))
+        self.mode_selection.setItemText(1, self.get_text("mode_grid"))
+        self.mode_selection.setItemText(2, self.get_text("mode_ai"))
+        self.mode_selection.setItemText(3, self.get_text("mode_spectral"))
+        self.mode_selection.blockSignals(False)
+
+        self.radius_title.setText(self.get_text("radius"))
+        self.color_title.setText(self.get_text("points_coordinates"))
+        self.diff_title.setText(self.get_text("difference_percent"))
+        self.sizer_title.setText(self.get_text("grid_multiplier"))
+        self.export_button.setText(self.get_text("export"))
+
+        if hasattr(self.ai_module, "apply_language"):
+            self.ai_module.apply_language(language)
+        if hasattr(self.spectral_filterer, "apply_language"):
+            self.spectral_filterer.apply_language(language)
+
+        self.update_compare_title()
 
 
     def clear_selected_images(self):
@@ -443,7 +512,7 @@ class SecondColumn(QWidget):
             return
 
         if SelectableImageBox.path[1] is None or SelectableImageBox.path[2] is None:
-            QMessageBox.warning(self, "Попередження", "Будь ласка, виберіть два зображення для порівняння.")
+            QMessageBox.warning(self, self.get_text("warning"), self.get_text("select_two_images"))
             return
 
         self.point_overlay.add_point(x, y)

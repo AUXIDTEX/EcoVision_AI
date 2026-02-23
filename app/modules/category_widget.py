@@ -84,17 +84,26 @@ class CategoryWidget(QWidget):
         self.bottom_container.addWidget(self.delete_category_button)
         self.delete_category_button.setIcon(QIcon("app/assets/delete_icon.png"))
         self.delete_category_button.setIconSize(QSize(24, 24))
-        self.delete_category_button.setMinimumSize(32, 32)
+        self.delete_category_button.setFixedSize(32, 32)
 
         self.delete_category_button.clicked.connect(self.delete_category)
 
 
         self.Image_box.image_selected.connect(self.second_column.ai_module.select_image)
+        manager = getattr(self.second_column.window, "settings_manager", None)
+        language = manager.get_language() if manager else "uk"
+        self.apply_language(language)
 
 
 
     def add_image(self):
-        self.file_path, _ = QFileDialog.getOpenFileName(self, "Виберіть зображення", "C:\\Users\\AUXIDTEX\\Pictures\\Folder", "Image Files (*.png *.jpg *.jpeg *.svg *.dng)")
+        start_path = self.second_column.window.get_default_open_path()
+        self.file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            self.second_column.window.get_text("pick_image_title"),
+            start_path,
+            "Image Files (*.png *.jpg *.jpeg *.svg *.dng)",
+        )
         if self.file_path:
 
             pixmap = QPixmap(self.file_path)
@@ -119,7 +128,13 @@ class CategoryWidget(QWidget):
         w=320
         h=180
 
-        self.file_path, _ = QFileDialog.getOpenFileName(self, "Виберіть зображення", "/media/auxidtex/Local Disk/Project Data/ai_module/Frames/train", "Image Files (*.png *.jpg *.jpeg *.tiff *.svg)")
+        start_path = self.second_column.window.get_default_open_path()
+        self.file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            self.second_column.window.get_text("pick_image_title"),
+            start_path,
+            "Image Files (*.png *.jpg *.jpeg *.tiff *.svg)",
+        )
         if self.file_path:
 
             index = next((i for i, item in enumerate(self.image_array) if item["path"] == old_path), None)
@@ -202,3 +217,7 @@ class CategoryWidget(QWidget):
 
         self.setParent(None)
         self.deleteLater()
+
+    def apply_language(self, language):
+        self.add_image_btn.setText(self.second_column.window.get_text("add_image"))
+        self.switch_image_btn.setText(self.second_column.window.get_text("switch_image"))

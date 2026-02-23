@@ -1,9 +1,11 @@
 from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QFrame, QSizePolicy, QLineEdit, QPushButton, QScrollArea
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QFont
+import os
 
 from modules.second_column import SecondColumn
 from modules.category_widget import CategoryWidget
+from modules.app_settings_manager import AppSettingsManager
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -77,6 +79,9 @@ class MainWindow(QMainWindow):
         self.Main_layout.addWidget(self.second_col, stretch=1) 
 
         self.main_col.addStretch()
+
+        self.settings_manager = AppSettingsManager(self)
+        self.settings_manager.apply_loaded_settings()
         
 
     def add_category(self):
@@ -92,3 +97,28 @@ class MainWindow(QMainWindow):
             category.add_image_to_array.connect(self.second_col.add_image_to_array) # Connect signal to second column method
 
             self.cats_layout.insertWidget(self.cats_layout.count() - 1, category)
+            category.apply_language(self.settings_manager.get_language())
+
+    def get_text(self, key):
+        if hasattr(self, "settings_manager"):
+            return self.settings_manager.get_text(key)
+        return key
+
+    def get_default_open_path(self):
+        if hasattr(self, "settings_manager"):
+            return self.settings_manager.get_default_open_path()
+        return os.path.expanduser("~")
+
+    def apply_language(self, language):
+        self.setWindowTitle(self.get_text("window_title"))
+        self.name_input.setPlaceholderText(self.get_text("name_placeholder"))
+        self.add_button.setText(self.get_text("add_category"))
+
+        if hasattr(self, "second_col"):
+            self.second_col.apply_language(language)
+
+        for i in range(self.cats_layout.count()):
+            item = self.cats_layout.itemAt(i)
+            widget = item.widget() if item else None
+            if widget and hasattr(widget, "apply_language"):
+                widget.apply_language(language)

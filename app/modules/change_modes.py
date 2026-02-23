@@ -31,13 +31,15 @@ def switch_modes(second_column, index):
             second_column.color_title.show()
             second_column.color_widget.show()
 
+            second_column.export_button.show()
+
             ai.ai_image_box.hide()
 
 
             second_column.grid_overlay.hide()
             second_column.grid_overlay2.hide()
 
-            second_column.compare_title.setText("Режим точок")
+            second_column.update_compare_title()
 
             for widget in second_column.output_widgets:
                 widget.show()
@@ -77,12 +79,14 @@ def switch_modes(second_column, index):
             second_column.spectral_filterer.hide()
 
             second_column.image_widget.show()
-            second_column.color_title.show()
-            second_column.color_widget.show()
+            second_column.color_title.hide()
+            second_column.color_widget.hide()
+
+            second_column.export_button.show()
 
             ai.ai_image_box.hide()
 
-            second_column.compare_title.setText("Режим сітки")
+            second_column.update_compare_title()
 
             second_column.point_overlay.hide()
             second_column.duped_layer.hide()
@@ -120,7 +124,9 @@ def switch_modes(second_column, index):
             second_column.color_widget.hide()
             second_column.spectral_filterer.hide()
 
-            second_column.compare_title.setText("Режим нейромережі")
+            second_column.export_button.hide()
+
+            second_column.update_compare_title()
 
             second_column.settings_widget.hide()
 
@@ -160,20 +166,22 @@ def switch_modes(second_column, index):
             second_column.color_title.hide()
             second_column.color_widget.hide()
 
+            second_column.export_button.hide()
+
             ai.vertical_ai_widget.hide()
             ai.ai_image_box.hide()
             second_column.spectral_filterer.show()
 
             second_column.settings_widget.hide()
 
-            second_column.compare_title.setText("Режим фільтрування зображень")
+            second_column.update_compare_title()
             
             second_column.spectral_filterer.set_image()
 
             second_column.window.update()
 
         else:
-            QMessageBox.warning(second_column, "Попередження", "Будь ласка, виберіть два зображення для порівняння.")
+            QMessageBox.warning(second_column, second_column.get_text("warning"), second_column.get_text("select_two_images"))
             second_column.mode_selection.blockSignals(True)
             second_column.mode_selection.setCurrentIndex(second_column.mode)
             second_column.mode_selection.blockSignals(False)

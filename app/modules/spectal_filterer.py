@@ -171,6 +171,7 @@ class SpectralFilterer(QWidget):
         """)
         self.progress_bar.hide() # Ховаємо за замовчуванням
         self.main_layout.addWidget(self.progress_bar)
+        self.apply_language("uk")
 
 
 
@@ -190,12 +191,42 @@ class SpectralFilterer(QWidget):
 
 
 
+    def get_default_open_path(self):
+        parent = self.parent()
+        if parent and hasattr(parent, "window") and parent.window and hasattr(parent.window, "get_default_open_path"):
+            return parent.window.get_default_open_path()
+        return os.path.expanduser("~")
+
+    def get_text(self, key, fallback):
+        parent = self.parent()
+        if parent and hasattr(parent, "window") and parent.window and hasattr(parent.window, "get_text"):
+            return parent.window.get_text(key)
+        return fallback
+
+    def apply_language(self, language):
+        self.file_mode_label.setText(self.get_text("file_mode", "Файл"))
+        self.folder_mode_label.setText(self.get_text("folder_mode", "Папка"))
+        self.save_button.setText(self.get_text("save_all_variants", "Зберегти усі варіанти"))
+        if self.selected_folder:
+            self.folder_select_btn.setText(f"{self.get_text('selected_folder', 'Вибрана папка')}: {os.path.basename(self.selected_folder)}")
+        else:
+            self.folder_select_btn.setText(self.get_text("pick_folder", "Вибрати папку"))
+
+        for i, item in enumerate(self.filters_array):
+            item["label_widget"].setText(f"{self.get_text('filter', 'Фільтр')} {i + 1}")
+            if "reset_btn" in item:
+                item["reset_btn"].setText(self.get_text("reset", "Скинути"))
+
     def select_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Виберіть папку з зображеннями")
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            self.get_text("pick_folder_images", "Виберіть папку з зображеннями"),
+            self.get_default_open_path(),
+        )
 
         if folder:
             self.selected_folder = folder
-            self.folder_select_btn.setText(f"Вибрана папка: {os.path.basename(folder)}")
+            self.folder_select_btn.setText(f"{self.get_text('selected_folder', 'Вибрана папка')}: {os.path.basename(folder)}")
 
             self.active_images = []
 
@@ -287,7 +318,7 @@ class SpectralFilterer(QWidget):
         filter_layout = QHBoxLayout()
         filter_widget.setLayout(filter_layout)
 
-        filter_label = QLabel("Фільтр " + str(self.count))
+        filter_label = QLabel(f"{self.get_text('filter', 'Фільтр')} {self.count}")
         filter_label.setStyleSheet("color: white; background-color: transparent; border: none;")
         filter_layout.addWidget(filter_label)
 
@@ -303,7 +334,7 @@ class SpectralFilterer(QWidget):
 
         color_label.clicked.connect(lambda _, label = color_label, code = color_code_label, filter_widget = filter_widget: self.select_color(label, code, filter_widget))
 
-        reset_btn = QPushButton("Скинути")
+        reset_btn = QPushButton(self.get_text("reset", "Скинути"))
         reset_btn.setStyleSheet("background-color: #3b3b3b; color: white; padding: 4px 10px; border-radius: 8px; border: 1px solid black;")
         reset_btn.clicked.connect(lambda _, color = starter_color, color_widget = color_label, name_widget = color_code_label, filter_widget = filter_widget: self.reset_filter(color, color_widget, name_widget, filter_widget))
         filter_layout.addWidget(reset_btn)
@@ -318,7 +349,7 @@ class SpectralFilterer(QWidget):
         filter_layout.addWidget(delete_btn)
 
 
-        array_data = {"widget": filter_widget, "label_widget": filter_label, "color": color}
+        array_data = {"widget": filter_widget, "label_widget": filter_label, "color": color, "reset_btn": reset_btn}
         self.filters_array.append(array_data)
 
 
@@ -376,7 +407,7 @@ class SpectralFilterer(QWidget):
         widget.deleteLater()
 
         for i, item in enumerate(self.filters_array):
-            item["label_widget"].setText("Фільтр " + str(i + 1))
+            item["label_widget"].setText(f"{self.get_text('filter', 'Фільтр')} {i + 1}")
         self.count = len(self.filters_array)
 
         if self.active_filter == widget:
@@ -418,7 +449,11 @@ class SpectralFilterer(QWidget):
         if not self.active_images or not self.filters_array:
             return
 
-        folder = QFileDialog.getExistingDirectory(self, "Виберіть папку для збереження")
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            self.get_text("pick_folder_save", "Виберіть папку для збереження"),
+            self.get_default_open_path(),
+        )
         if not folder:
             return
 

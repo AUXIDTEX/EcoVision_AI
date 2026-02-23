@@ -243,6 +243,27 @@ class AI_Module:
 
         self.img_w = self.ai_image_box.width()
         self.img_h = self.ai_image_box.height()
+        self.apply_language("uk")
+
+    def get_text(self, key, fallback):
+        if self.second_column and self.second_column.window and hasattr(self.second_column.window, "get_text"):
+            return self.second_column.window.get_text(key)
+        return fallback
+
+    def apply_language(self, language):
+        self.file_mode_label.setText(self.get_text("file_mode", "Файл"))
+        self.folder_mode_label.setText(self.get_text("folder_mode", "Папка"))
+        self.info_title.setText(self.get_text("ai_report_title", "Звіт нейромережі"))
+        if self.ai_selected_folder:
+            self.ai_folder_select_btn.setText(
+                f"{self.get_text('selected_folder', 'Вибрана папка')}: {os.path.basename(self.ai_selected_folder)}"
+            )
+        else:
+            self.ai_folder_select_btn.setText(self.get_text("pick_folder", "Вибрати папку"))
+        self.ai_folder_find_btn.setText(self.get_text("run", "Виконати"))
+        self.process_button.setText(self.get_text("run", "Виконати"))
+        self.info_label.setText(self.get_text("ai_run_hint", "Натисніть 'Виконати' для обробки вибраних зображень"))
+        self.export_button.setText(self.get_text("export_report", "Експортувати звіт"))
 
 
 
@@ -511,15 +532,24 @@ class AI_Module:
         
 
     def select_ai_folder(self):
-        folder = QFileDialog.getExistingDirectory(self.second_column, "Вибрати папку з зображень")
+        folder = QFileDialog.getExistingDirectory(
+            self.second_column,
+            self.second_column.window.get_text("pick_folder_images"),
+            self.second_column.window.get_default_open_path(),
+        )
         if not folder:
             return
 
         self.ai_selected_folder = folder
         self.last_ai_folder_report = []
-        self.ai_folder_select_btn.setText(f"Вибрана папка: {os.path.basename(folder)}")
+        self.ai_folder_select_btn.setText(
+            f"{self.get_text('selected_folder', 'Вибрана папка')}: {os.path.basename(folder)}"
+        )
         self.clear_ai_folder_results()
-        self.ai_folder_content_layout.insertWidget(len(self.ai_folder_content_layout) - 1, QLabel("Папка обрана. Натисніть 'Виконати' для обробки."))
+        self.ai_folder_content_layout.insertWidget(
+            len(self.ai_folder_content_layout) - 1,
+            QLabel(self.get_text("ai_run_hint", "Натисніть 'Виконати' для обробки вибраних зображень")),
+        )
 
 
 
@@ -767,6 +797,7 @@ class AI_Module:
             os.path.join(folder, name)
             for name in sorted(os.listdir(folder))
             if name.lower().endswith(image_ext)
+            
         ]
 
         self.clear_ai_folder_results()
@@ -1059,7 +1090,7 @@ class AI_Module:
         save_path, _ = QFileDialog.getSaveFileName(
             self.second_column,
             title,
-            f"{default_name}.{ext}",
+            os.path.join(self.second_column.window.get_default_open_path(), f"{default_name}.{ext}"),
             filter_text,
         )
         if not save_path:
