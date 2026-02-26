@@ -27,6 +27,15 @@ The project combines:
   <img width="2560" height="1380" alt="Interface_filterer" src="https://github.com/user-attachments/assets/0fb8f4aa-41c1-4acf-98f3-caa8f0631267" />
 
 
+### In each analysis mode you can export parameters you get during analysis in JSON or PDF file, for example:
+  
+   - [frame_000362.jpg.pdf](https://github.com/user-attachments/files/25582624/frame_000362.jpg.pdf)      # AI mode export
+   - [grid_export.pdf](https://github.com/user-attachments/files/25582640/grid_export.pdf)                # Grid mode export
+   - [points_export.pdf](https://github.com/user-attachments/files/25582641/points_export.pdf)            # Point mode export
+
+
+
+
 ## Classes Detected by the Neural Network
 
 The model detects 5 classes:
