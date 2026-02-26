@@ -1,0 +1,25 @@
+__pycache__/
+.vscode/
+.devcontainer/
+ai_module/badfolder/
+ai_module/Frames/
+ai_module/runs/
+ai_module/Videos Unfiltered/
+ai_module/workspace/
+output_images/
+bad_folder/
+ai_module/bad folder/
+venv/
+ai_module/dataset/
+models/
+bad folder/
+runs/
+output.jpg
+model_output.jpg
+app.zip
+yolo11n.pt
+rtdetr-l.pt
+yolo26n.pt
+venv_win/
+app/user_settings.json
+ai_module/datasets/
