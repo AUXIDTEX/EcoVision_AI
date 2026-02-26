@@ -16,9 +16,9 @@ except Exception:
 
 LABEL_STUDIO_URL = os.getenv("LABEL_STUDIO_URL", "http://localhost:8080")
 LABEL_STUDIO_API_KEY = os.getenv("LABEL_STUDIO_API_KEY", "")
-PROJECT_ID = int(os.getenv("PROJECT_ID", "12"))
+PROJECT_ID = int(os.getenv("PROJECT_ID", "13"))
 MODEL_PATH = os.getenv("MODEL_PATH", "/workspace/app/assets/Tree_disseses_finder.pt")
-MODEL_VERSION = os.getenv("MODEL_VERSION", "finder")
+MODEL_VERSION = os.getenv("MODEL_VERSION", "finder_v2")
 FROM_NAME = os.getenv("FROM_NAME", "label")
 TO_NAME = os.getenv("TO_NAME", "image")
 RESULT_TYPE = os.getenv("RESULT_TYPE", "rectanglelabels")
@@ -116,7 +116,13 @@ def download_image(task_image_url: str, base_url: str, auth_values: list[str]) -
 
 def predict_for_image(img: Image.Image) -> dict:
     orig_w, orig_h = img.size
-    yolo_result = model.predict(img, device=device)[0]
+    yolo_result = model.predict(
+        img,
+        device=device,
+        conf = 0.3,
+        iou = 0.4,
+        agnostic_nms = True
+        )[0]
 
     regions = []
     best_score = 0.0

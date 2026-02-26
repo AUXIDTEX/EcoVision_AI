@@ -1,16 +1,16 @@
 import torch
-from ultralytics import YOLO
+from ultralytics import YOLO, RTDETR
 
 torch.cuda.empty_cache()
 
-model = YOLO("models/yolo12n.pt")
+model = RTDETR("rtdetr-l.pt")
 
 # Навчання
 model.train(
     data="ai_module/dataset/data.yaml", 
     epochs=400,
     imgsz=640,
-    batch=24,       
+    batch=12,       
     workers=4,
     device="0",
     patience = 40,
