@@ -1,6 +1,5 @@
 __pycache__/
 .vscode/
-.devcontainer/
 ai_module/badfolder/
 ai_module/Frames/
 ai_module/runs/
@@ -20,6 +19,11 @@ app.zip
 yolo11n.pt
 rtdetr-l.pt
 yolo26n.pt
+yolo12n.pt
+yolo12s.pt
+yolo26m.pt
+yolo26s.pt
 venv_win/
 app/user_settings.json
 ai_module/datasets/
+ai_module/dataset_2/
