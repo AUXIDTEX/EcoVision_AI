@@ -15,7 +15,7 @@ class AI_Module:
         self.second_column = second_column
         self.secon_layout = second_column.secon_layout
 
-
+        self.model_path = "app/models/Tree_disease_finder.pt"
 
         self.ai_process = None
         self.ai_source_path = None
@@ -98,6 +98,7 @@ class AI_Module:
         self.ai_image_box = QLabel()
         self.ai_image_box.setStyleSheet("border: none; background-color: transparent;")
         self.ai_image_box.setFixedSize(300, 533)
+        self.ai_image_box.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.ai_layout.addWidget(self.ai_image_box, alignment=Qt.AlignmentFlag.AlignLeft)
 
         self.ai_info_widget = QWidget()
@@ -290,19 +291,7 @@ class AI_Module:
 
 
         pixmap = QPixmap(image_path)
-        if pixmap.width() > pixmap.height():
-            pixmap = pixmap.scaled(w, h, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-            self.ai_image_box.setFixedSize(self.img_h, self.img_w)
-
-            self.sync_overlay()
-        else:
-            pixmap = pixmap.scaled(h, w, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-            self.ai_image_box.setFixedSize(self.img_w, self.img_h)
-
-            self.sync_overlay()
-
-        self.ai_image_box.setPixmap(pixmap)
-        self.ai_image_box.setScaledContents(True)
+        self._set_ai_image_pixmap(pixmap)
             
 
         
@@ -340,6 +329,32 @@ class AI_Module:
 
 
 
+    def _scaled_for_ai_box(self, pixmap):
+        if pixmap is None or pixmap.isNull():
+            return QPixmap(), QSize(self.img_w, self.img_h)
+
+        # Portrait images get a portrait box (300x533), landscape/square get landscape box (533x300).
+        if pixmap.width() > pixmap.height():
+            target_size = QSize(self.img_h, self.img_w)
+        else:
+            target_size = QSize(self.img_w, self.img_h)
+
+        scaled = pixmap.scaled(
+            target_size,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        return scaled, scaled.size()
+
+
+    def _set_ai_image_pixmap(self, pixmap):
+        scaled, label_size = self._scaled_for_ai_box(pixmap)
+        self.ai_image_box.setFixedSize(label_size)
+        self.ai_image_box.setPixmap(scaled)
+        self.ai_image_box.setScaledContents(False)
+        self.sync_overlay()
+
+
     def sync_overlay(self):
         margin = 8
         x = max(self.ai_image_box.width() - self.preview_button.width() - margin, 0)
@@ -367,13 +382,13 @@ class AI_Module:
                 return
             self.preview_state = False
             self.preview_button.setIcon(QIcon("app/assets/eye_openned.png"))
-            self.ai_image_box.setPixmap(entry["analyzed_pixmap"])
+            self._set_ai_image_pixmap(entry["analyzed_pixmap"])
         else:
             if entry["original_pixmap"] is None:
                 return
             self.preview_state = True
             self.preview_button.setIcon(QIcon("app/assets/eye_closed.png"))
-            self.ai_image_box.setPixmap(entry["original_pixmap"])
+            self._set_ai_image_pixmap(entry["original_pixmap"])
                 
 
         
@@ -440,27 +455,16 @@ class AI_Module:
     def _on_mode_switched(self, image_path):
         if not image_path:
             self.ai_image_box.clear()
+            self.sync_overlay()
             return
         
         if self.file_mode_label.isChecked():
             #self.start_ai_inference(image_path)
 
-            w=1200
-            h=675
-
             pixmap = QPixmap(image_path)
 
             if self.previous_mode == None or self.previous_mode == 1:
-
-
-                if pixmap.width() > pixmap.height():
-                    pixmap = pixmap.scaled(w, h, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-
-                else:
-                    pixmap = pixmap.scaled(h, w, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-                
-                self.ai_image_box.setPixmap(pixmap)
-                self.ai_image_box.setScaledContents(True)
+                self._set_ai_image_pixmap(pixmap)
                 self.current_image_path = image_path
                 self.preview_state = True
                 self.preview_button.setIcon(QIcon("app/assets/eye_closed.png"))
@@ -512,7 +516,7 @@ class AI_Module:
 
         self.ai_process = QProcess(self.second_column)
         self.ai_process.setProgram(sys.executable)
-        self.ai_process.setArguments(["app/logic/run_yolo.py", image_path])
+        self.ai_process.setArguments(["app/logic/run_yolo.py", image_path, self.model_path])
         self.ai_process.finished.connect(self.on_ai_inference_finished)
         self.ai_process.errorOccurred.connect(self.on_ai_inference_error)
         self.ai_process.start()
@@ -574,7 +578,7 @@ class AI_Module:
 
         self.ai_folder_process = QProcess(self.second_column)
         self.ai_folder_process.setProgram(sys.executable)
-        self.ai_folder_process.setArguments(["app/logic/run_yolo.py", image_path])
+        self.ai_folder_process.setArguments(["app/logic/run_yolo.py", image_path, self.model_path])
         self.ai_folder_process.finished.connect(
             lambda code, status, p=image_path: self.on_ai_folder_item_finished(code, status, p)
         )
@@ -916,9 +920,7 @@ class AI_Module:
         detections = parsed.get("detections", [])
 
         pixmap = QPixmap(output_path)
-        pixmap = pixmap.scaled(1200, 1200, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-        self.ai_image_box.setPixmap(pixmap)
-        self.ai_image_box.setScaledContents(True)
+        self._set_ai_image_pixmap(pixmap)
         self.current_image_path = self.ai_source_path
         self.add_pixmap_to_array(self.ai_source_path, None, pixmap)
         self.preview_state = False
@@ -1544,3 +1546,15 @@ class AI_Module:
             f"Не вдалося запустити процес обробки (код: {int(process_error)}).",
         )
 
+
+    def change_model(self, model_name):
+
+        if model_name == "Tree Disease Finder":
+            self.model_path = "app/models/Tree_disease_finder.pt"
+
+        elif model_name == "Water Disease Finder":
+            self.model_path = "app/models/Water_disease_finder.pt"
+
+        else:
+            QMessageBox.warning(self.second_column, "Попередження", f"Невідома модель: {model_name}")
+            return

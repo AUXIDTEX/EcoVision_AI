@@ -59,24 +59,45 @@ class SecondColumn(QWidget):
         self.compare_layout.addWidget(self.compare_title, alignment=Qt.AlignmentFlag.AlignRight)
 
 
-        self.mode_selection = QComboBox()
-        self.mode_selection.addItem("Точки")
-        self.mode_selection.addItem("Сітка")
-        self.mode_selection.addItem("Нейромережа")
-        self.mode_selection.addItem("Фільтрування зображень")
-        self.mode_selection.setCurrentIndex(0)
-        
-        self.mode_selection.currentIndexChanged.connect(self.switch_mode_func)
-        self.mode_selection.currentIndexChanged.connect(SelectableImageBox.update_index)
+
 
         self.switch_layout = QHBoxLayout()
         self.switch_widget = QWidget()
         self.switch_widget.setStyleSheet("border: none; background-color: transparent;")
         self.switch_widget.setLayout(self.switch_layout)
 
-        self.switch_layout.addWidget(self.mode_selection)
+
+
+        self.mode_selection = QComboBox()
+        self.mode_selection.addItem("Точки")
+        self.mode_selection.addItem("Сітка")
+        self.mode_selection.addItem("Нейромережа")
+        self.mode_selection.addItem("Фільтрування зображень")
+        self.mode_selection.setCurrentIndex(0)
+
+        
+        self.mode_selection.currentIndexChanged.connect(self.switch_mode_func)
+        self.mode_selection.currentIndexChanged.connect(SelectableImageBox.update_index)
+
+
+        self.ai_module = AI_Module(self)
+        self.secon_layout.addWidget(self.ai_module.vertical_ai_widget)
+
+
+
+        self.ai_model_selection = QComboBox()
+        self.ai_model_selection.addItem("Tree Disease Finder")
+        self.ai_model_selection.addItem("Water Disease Finder")
+        self.ai_model_selection.setCurrentIndex(0)
+        self.ai_model_selection.hide()
+
+        self.switch_layout.addWidget(self.ai_model_selection)
+
+        self.ai_model_selection.currentIndexChanged.connect(self.change_model)
+        self.change_model()
 
         self.compare_layout.addWidget(self.switch_widget, alignment=Qt.AlignmentFlag.AlignRight)
+        self.switch_layout.addWidget(self.mode_selection)
 
         
 
@@ -304,8 +325,6 @@ class SecondColumn(QWidget):
         self.spectral_filterer.hide()
 
 
-        self.ai_module = AI_Module( self)
-        self.secon_layout.addWidget(self.ai_module.vertical_ai_widget)
 
 
         self.export_button = QPushButton("Експортувати")
@@ -328,6 +347,13 @@ class SecondColumn(QWidget):
         self.secon_layout.addStretch()
         self.apply_language("uk")
 
+    def change_model(self):
+        index = self.ai_model_selection.currentIndex()
+
+        if index == 0:
+            self.ai_module.change_model("Tree Disease Finder")
+        elif index == 1:
+            self.ai_module.change_model("Water Disease Finder")
 
 
     def add_image_to_array(self, file_path):

@@ -8,8 +8,12 @@ import torch
 from ultralytics import YOLO
 
 
-def run_yolo(path, output_path=None):
-    model = YOLO("app/assets/Tree_disseses_finder.pt")
+
+
+def run_yolo(path, model_path, output_path=None):
+    current_model = model_path
+
+    model = YOLO(current_model)
     image_path = path
 
     if output_path is None:
@@ -49,12 +53,13 @@ def run_yolo(path, output_path=None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("image_path")
+    parser.add_argument("model_path")
     parser.add_argument("--output-path", default=None)
     args = parser.parse_args()
 
     try:
         output_path, class_name, conf, xyxy, detections = run_yolo(
-            args.image_path, output_path=args.output_path
+            args.image_path, args.model_path, output_path=args.output_path
         )
         print(
             json.dumps(

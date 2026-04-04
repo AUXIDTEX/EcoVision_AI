@@ -3,19 +3,32 @@ from ultralytics import YOLO
 
 torch.cuda.empty_cache()
 
+print(f"BF16 supported: {torch.cuda.is_bf16_supported()}")
+
 model = YOLO("yolo26m.pt")
+#model = YOLO("/workspace/runs/detect/train_auto/train_fixed_amp/weights/best.pt")
+
+model.to("cuda")
 
 # Навчання
 model.train(
     data="ai_module/dataset_2/data.yaml", 
     epochs=400,
     imgsz=640,
-    batch=12,       
-    workers=4,
+    batch=16,       
+    workers=2,
     device="0",
     patience = 80,
-    cache=True,
-    amp=False,
+    #cache=True,
+
+    task="detect",
+    
+    amp=True,
+    half=False,   
+
+    save=True,
+    save_period=10,
+    project="/workspace/runs/detect/train_auto",
 
     cos_lr=True,
 
@@ -39,9 +52,9 @@ model.train(
     close_mosaic=10,
     
     # Optimizer
-    optimizer='AdamW',
+    optimizer='SGD',
     weight_decay=0.0005,
-    lr0=0.0005,
+    lr0=0.01,
     lrf=0.01,
     warmup_epochs=5.0,
 )

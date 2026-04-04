@@ -10,7 +10,6 @@ bad_folder/
 ai_module/bad folder/
 venv/
 ai_module/dataset/
-models/
 bad folder/
 runs/
 output.jpg
@@ -27,3 +26,6 @@ venv_win/
 app/user_settings.json
 ai_module/datasets/
 ai_module/dataset_2/
+.miopen_cache/
+temp_data.yaml
+pre-made_models/

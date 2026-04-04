@@ -54,6 +54,7 @@ def switch_modes(second_column, index):
             second_column.diff_widget.hide()
             second_column.sizer_widget.hide()
 
+            second_column.ai_model_selection.hide()
 
             if second_column.image1.show() == True:
               second_column.point_overlay.show()
@@ -105,6 +106,8 @@ def switch_modes(second_column, index):
             second_column.diff_widget.show()
             second_column.sizer_widget.show()
 
+            second_column.ai_model_selection.hide()
+
             for widget in second_column.output_widgets:
                 widget.hide()
 
@@ -129,6 +132,8 @@ def switch_modes(second_column, index):
             second_column.update_compare_title()
 
             second_column.settings_widget.hide()
+
+            second_column.ai_model_selection.show()
 
             ai.vertical_ai_widget.show()
             ai.mode_switch_func("1" if ai.file_mode_label.isChecked() else "2")
@@ -177,6 +182,8 @@ def switch_modes(second_column, index):
             second_column.update_compare_title()
             
             second_column.spectral_filterer.set_image()
+
+            second_column.ai_model_selection.hide()
 
             second_column.window.update()
 
