@@ -1,8 +1,9 @@
-from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QButtonGroup, QScrollArea, QColorDialog, QStyleOption, QStyle, QFileDialog, QProgressBar, QApplication
+from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QButtonGroup, QScrollArea, QColorDialog, QStyleOption, QStyle, QFileDialog, QProgressBar, QApplication, QSizePolicy
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QPixmap, QIcon, QPainter, QColor
 import os
 
+from modules.image_scaling import scale_pixmap_to_fit
 from modules.selectable_imagebox import SelectableImageBox
 
 
@@ -28,11 +29,11 @@ class SpectralFilterer(QWidget):
         self.mode_widget.setLayout(self.mode_switch)
         self.main_layout.addWidget(self.mode_widget, alignment=Qt.AlignmentFlag.AlignTop)
 
-        self.file_mode_label = QPushButton("Файл")
+        self.file_mode_label = QPushButton("File")
         self.file_mode_label.setCheckable(True)
         self.file_mode_label.setMinimumSize(80, 30)
 
-        self.folder_mode_label = QPushButton("Папка")
+        self.folder_mode_label = QPushButton("Folder")
         self.folder_mode_label.setCheckable(True)
         self.folder_mode_label.setMinimumSize(80, 30)
 
@@ -57,22 +58,22 @@ class SpectralFilterer(QWidget):
 
         self.image_widget = QWidget()
         self.image_layout = QHBoxLayout()
-        self.image_widget.setMinimumSize(220, 220)
+        self.image_widget.setMinimumSize(160, 120)
+        self.image_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.image_widget.setStyleSheet("border: 2px solid #808080; border-radius: 8px; background-color: #2b2b2b;")
         self.image_widget.setLayout(self.image_layout)
 
         self.image_box = QLabel()
         self.image_box.setStyleSheet("border: none; background-color: transparent;")
-        self.image_box.setMinimumSize(220, 220)
+        self.image_box.setMinimumSize(120, 90)
+        self.image_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.image_box.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image_layout.addWidget(self.image_box)
 
         self.horizontal_layout.addWidget(self.image_widget, alignment=Qt.AlignmentFlag.AlignLeft)
         #self.horizontal_layout.addStretch()
 
-        pixmap = QPixmap("app/assets/select_image.png")
-        pixmap = pixmap.scaled(220, 220, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-        self.image_box.setPixmap(pixmap)
-        self.image_box.setScaledContents(True)
+        self._set_placeholder_image()
 
 
 
@@ -93,7 +94,8 @@ class SpectralFilterer(QWidget):
         self.scroll_layout.addWidget(self.add_filter_btn, alignment=Qt.AlignmentFlag.AlignRight)
         self.add_filter_btn.setIcon(QIcon("app/assets/plus_icon.png"))
         self.add_filter_btn.setIconSize(QSize(24,24))
-        self.add_filter_btn.setFixedSize(32,32)
+        self.add_filter_btn.setMinimumSize(32, 32)
+        self.add_filter_btn.setMaximumSize(40, 40)
         self.add_filter_btn.setStyleSheet("background-color: #3b3b3b; border: 1px solid #808080; border-radius: 8px;")
         self.add_filter_btn.clicked.connect(lambda: self.create_filter("#ffffff", None))
 
@@ -116,8 +118,8 @@ class SpectralFilterer(QWidget):
 
 
 
-        self.save_button = QPushButton("Зберегти усі варіанти")
-        self.save_button.setFixedHeight(40)
+        self.save_button = QPushButton("Save all variants")
+        self.save_button.setMinimumHeight(36)
         self.save_button.setStyleSheet("""
             QPushButton {
                 background-color: #2e7d32; 
@@ -131,8 +133,8 @@ class SpectralFilterer(QWidget):
         self.main_layout.addWidget(self.save_button)
 
 
-        self.folder_select_btn = QPushButton("Вибрати папку")
-        self.folder_select_btn.setFixedHeight(40)
+        self.folder_select_btn = QPushButton("Select folder")
+        self.folder_select_btn.setMinimumHeight(36)
         self.main_layout.addWidget(self.folder_select_btn)
         self.folder_select_btn.setStyleSheet("""
                                              QPushButton {
@@ -169,12 +171,21 @@ class SpectralFilterer(QWidget):
                 width: 10px;
             }
         """)
-        self.progress_bar.hide() # Ховаємо за замовчуванням
+        self.progress_bar.hide()  # Hidden by default
         self.main_layout.addWidget(self.progress_bar)
         self.apply_language("uk")
 
 
 
+
+    def _preview_target_size(self):
+        return QSize(max(self.image_box.width(), 1), max(self.image_box.height(), 1))
+
+    def _set_placeholder_image(self):
+        pixmap = QPixmap("app/assets/select_image.png")
+        scaled = scale_pixmap_to_fit(pixmap, self._preview_target_size(), min_w=1, min_h=1)
+        self.image_box.setPixmap(scaled)
+        self.image_box.setScaledContents(False)
 
     def mode_switch_func(self, mode):
         if mode == "1":
@@ -204,29 +215,29 @@ class SpectralFilterer(QWidget):
         return fallback
 
     def apply_language(self, language):
-        self.file_mode_label.setText(self.get_text("file_mode", "Файл"))
-        self.folder_mode_label.setText(self.get_text("folder_mode", "Папка"))
-        self.save_button.setText(self.get_text("save_all_variants", "Зберегти усі варіанти"))
+        self.file_mode_label.setText(self.get_text("file_mode", "File"))
+        self.folder_mode_label.setText(self.get_text("folder_mode", "Folder"))
+        self.save_button.setText(self.get_text("save_all_variants", "Save all variants"))
         if self.selected_folder:
-            self.folder_select_btn.setText(f"{self.get_text('selected_folder', 'Вибрана папка')}: {os.path.basename(self.selected_folder)}")
+            self.folder_select_btn.setText(f"{self.get_text('selected_folder', 'Selected folder')}: {os.path.basename(self.selected_folder)}")
         else:
-            self.folder_select_btn.setText(self.get_text("pick_folder", "Вибрати папку"))
+            self.folder_select_btn.setText(self.get_text("pick_folder", "Select folder"))
 
         for i, item in enumerate(self.filters_array):
-            item["label_widget"].setText(f"{self.get_text('filter', 'Фільтр')} {i + 1}")
+            item["label_widget"].setText(f"{self.get_text('filter', 'Filter')} {i + 1}")
             if "reset_btn" in item:
-                item["reset_btn"].setText(self.get_text("reset", "Скинути"))
+                item["reset_btn"].setText(self.get_text("reset", "Reset"))
 
     def select_folder(self):
         folder = QFileDialog.getExistingDirectory(
             self,
-            self.get_text("pick_folder_images", "Виберіть папку з зображеннями"),
+            self.get_text("pick_folder_images", "Choose folder with images"),
             self.get_default_open_path(),
         )
 
         if folder:
             self.selected_folder = folder
-            self.folder_select_btn.setText(f"{self.get_text('selected_folder', 'Вибрана папка')}: {os.path.basename(folder)}")
+            self.folder_select_btn.setText(f"{self.get_text('selected_folder', 'Selected folder')}: {os.path.basename(folder)}")
 
             self.active_images = []
 
@@ -241,7 +252,7 @@ class SpectralFilterer(QWidget):
                 self.selected_image_path = self.active_images[0]
                 
                 pixmap = QPixmap(self.active_images[0])
-                self.image_box.setPixmap(pixmap)
+                self.image_box.setPixmap(scale_pixmap_to_fit(pixmap, self._preview_target_size(), min_w=1, min_h=1))
         
 
     
@@ -266,36 +277,24 @@ class SpectralFilterer(QWidget):
 
 
     def set_image(self):
-        w, h = 320, 180
-
         if SelectableImageBox.path[1] is not None:
+            selected_path = SelectableImageBox.path[1]
 
-            pixmap = QPixmap(SelectableImageBox.path[1])
+            pixmap = QPixmap(selected_path)
+            self.image_box.setPixmap(scale_pixmap_to_fit(pixmap, self._preview_target_size(), min_w=1, min_h=1))
+            self.image_box.setScaledContents(False)
 
-            if pixmap.width() > pixmap.height():
-                pixmap = pixmap.scaled(w, h, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-
-            else:
-                pixmap = pixmap.scaled(h, w, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-
-            self.image_box.setPixmap(pixmap)
-            self.image_box.setFixedSize(pixmap.size())
-
-            self.active_images.append(SelectableImageBox.path[1])
-            self.selected_image_path = SelectableImageBox.path[1]
+            if selected_path not in self.active_images:
+                self.active_images.append(selected_path)
+            self.selected_image_path = selected_path
 
             self.apply_filter(self.active_filter)
 
         else:
-            pixmap = QPixmap("app/assets/select_image.png")
-            pixmap = pixmap.scaled(220, 220, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-            self.image_box.setPixmap(pixmap)
-            self.image_box.setScaledContents(True)
-            self.image_box.setFixedSize(pixmap.size())
+            self._set_placeholder_image()
 
-            for i in self.active_images:
-                if i == SelectableImageBox.path[1]:
-                    self.active_images.remove(i)
+            if self.selected_image_path in self.active_images:
+                self.active_images.remove(self.selected_image_path)
 
             self.selected_image_path = None
 
@@ -310,7 +309,7 @@ class SpectralFilterer(QWidget):
     
         filter_widget = Filter_visuals(self)
         filter_widget.setObjectName("FilterCard")
-        filter_widget.setFixedHeight(50)
+        filter_widget.setMinimumHeight(50)
         filter_widget.update_appearance()
         
         self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, filter_widget)
@@ -318,7 +317,7 @@ class SpectralFilterer(QWidget):
         filter_layout = QHBoxLayout()
         filter_widget.setLayout(filter_layout)
 
-        filter_label = QLabel(f"{self.get_text('filter', 'Фільтр')} {self.count}")
+        filter_label = QLabel(f"{self.get_text('filter', 'Filter')} {self.count}")
         filter_label.setStyleSheet("color: white; background-color: transparent; border: none;")
         filter_layout.addWidget(filter_label)
 
@@ -334,7 +333,7 @@ class SpectralFilterer(QWidget):
 
         color_label.clicked.connect(lambda _, label = color_label, code = color_code_label, filter_widget = filter_widget: self.select_color(label, code, filter_widget))
 
-        reset_btn = QPushButton(self.get_text("reset", "Скинути"))
+        reset_btn = QPushButton(self.get_text("reset", "Reset"))
         reset_btn.setStyleSheet("background-color: #3b3b3b; color: white; padding: 4px 10px; border-radius: 8px; border: 1px solid black;")
         reset_btn.clicked.connect(lambda _, color = starter_color, color_widget = color_label, name_widget = color_code_label, filter_widget = filter_widget: self.reset_filter(color, color_widget, name_widget, filter_widget))
         filter_layout.addWidget(reset_btn)
@@ -407,7 +406,7 @@ class SpectralFilterer(QWidget):
         widget.deleteLater()
 
         for i, item in enumerate(self.filters_array):
-            item["label_widget"].setText(f"{self.get_text('filter', 'Фільтр')} {i + 1}")
+            item["label_widget"].setText(f"{self.get_text('filter', 'Filter')} {i + 1}")
         self.count = len(self.filters_array)
 
         if self.active_filter == widget:
@@ -451,7 +450,7 @@ class SpectralFilterer(QWidget):
 
         folder = QFileDialog.getExistingDirectory(
             self,
-            self.get_text("pick_folder_save", "Виберіть папку для збереження"),
+            self.get_text("pick_folder_save", "Choose folder for saving"),
             self.get_default_open_path(),
         )
         if not folder:
@@ -486,11 +485,19 @@ class SpectralFilterer(QWidget):
 
                 QApplication.processEvents()
 
-        # Завершення
-        print(f"Збережено {current_task} зображень.")
+        # Р В РІР‚вЂќР В Р’В°Р В Р вЂ Р В Р’ВµР РЋР вЂљР РЋРІвЂљВ¬Р В Р’ВµР В Р вЂ¦Р В Р вЂ¦Р РЋР РЏ
+        print(f"Saved {current_task} images.")
         self.progress_bar.hide()
 
     
+
+
+    def refresh_on_resize(self):
+        self.set_image()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.refresh_on_resize()
 
 
 class Filter_visuals(QWidget):

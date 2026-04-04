@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QFrame, QSizePolicy, QLineEdit, QPushButton, QScrollArea
+from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QFrame, QSizePolicy, QLineEdit, QPushButton, QScrollArea, QSplitter
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QFont
 import os
@@ -11,8 +11,9 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Порівняння зображень")
-        self.setGeometry(0, 0, 1600, 900) #x, y, width, height
+        self.setWindowTitle("РџРѕСЂС–РІРЅСЏРЅРЅСЏ Р·РѕР±СЂР°Р¶РµРЅСЊ")
+        self.resize(1366, 768)
+        self.setMinimumSize(1280, 720)
         self.setWindowIcon(QIcon('app/assets/radar.ico'))
         self.setStyleSheet("background-color: #1d1d1d; color: white;")
         self.setFont(QFont("Arial", 14))
@@ -26,8 +27,8 @@ class MainWindow(QMainWindow):
         self.main_col_widget = QWidget()
         self.main_col = QVBoxLayout()
         self.main_col_widget.setLayout(self.main_col)
-        self.main_col_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
-        self.Main_layout.addWidget(self.main_col_widget, stretch=1)
+        self.main_col_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.main_col_widget.setMinimumWidth(340)
 
 
 
@@ -39,11 +40,11 @@ class MainWindow(QMainWindow):
         self.main_col.addWidget(self.add_widget, alignment=Qt.AlignmentFlag.AlignTop)
 
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Введіть назву")
+        self.name_input.setPlaceholderText("Р’РІРµРґС–С‚СЊ РЅР°Р·РІСѓ")
         self.name_input.setStyleSheet("padding: 6px; border-radius: 8px; background-color: #3b3b3b; color: white; border: 1px solid #808080;")
         self.add_layout.addWidget(self.name_input)
 
-        self.add_button = QPushButton("Додати")
+        self.add_button = QPushButton("Р”РѕРґР°С‚Рё")
         self.add_button.clicked.connect(self.add_category)
         self.add_button.setStyleSheet("background-color: transparent; color: #ffd500; padding: 8px 14px; border-radius: 8px; border: 1px solid #ffd500;")
         self.add_layout.addWidget(self.add_button)
@@ -61,11 +62,10 @@ class MainWindow(QMainWindow):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll_area.setMinimumHeight(350)
-        self.scroll_area.setMaximumHeight(400)
+        self.scroll_area.setMinimumHeight(220)
 
         self.scroll_area.setWidget(self.cats_frame)
-        self.main_col.addWidget(self.scroll_area, alignment=Qt.AlignmentFlag.AlignTop)
+        self.main_col.addWidget(self.scroll_area, stretch=1)
 
 
         self.settings_widget = QWidget()
@@ -76,7 +76,16 @@ class MainWindow(QMainWindow):
 
         self.second_col = SecondColumn(self, main_window=self, settings_layout=self.settings_layout, settings_widget=self.settings_widget)
         self.second_col.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.Main_layout.addWidget(self.second_col, stretch=1) 
+        self.second_col.setMinimumWidth(520)
+
+        self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.main_splitter.setChildrenCollapsible(False)
+        self.main_splitter.addWidget(self.main_col_widget)
+        self.main_splitter.addWidget(self.second_col)
+        self.main_splitter.setStretchFactor(0, 1)
+        self.main_splitter.setStretchFactor(1, 2)
+        self.main_splitter.setSizes([460, 900])
+        self.Main_layout.addWidget(self.main_splitter)
 
         self.main_col.addStretch()
 
@@ -91,8 +100,8 @@ class MainWindow(QMainWindow):
 
             category = CategoryWidget(self, category_name=category_name, second_col = self.second_col, image1=self.second_col.image1, image2=self.second_col.image2)
 
-            category.setMaximumWidth(300)
-            category.setMinimumWidth(200)
+            category.setMaximumWidth(420)
+            category.setMinimumWidth(220)
 
             category.add_image_to_array.connect(self.second_col.add_image_to_array) # Connect signal to second column method
 

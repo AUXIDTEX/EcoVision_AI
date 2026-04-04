@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 import time
 import json
@@ -7,6 +7,7 @@ from PyQt6.QtCore import QProcess, QSize, Qt, QRect
 from PyQt6.QtGui import QIcon, QIcon, QPixmap, QPdfWriter, QPainter, QFont, QPageSize, QFontMetrics
 from PyQt6.QtWidgets import QFrame, QMessageBox, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QSizePolicy, QProgressBar, QScrollArea, QButtonGroup, QFileDialog
 
+from modules.image_scaling import scale_pixmap_to_fit
 from modules.selectable_imagebox import SelectableImageBox
 
 
@@ -97,9 +98,10 @@ class AI_Module:
 
         self.ai_image_box = QLabel()
         self.ai_image_box.setStyleSheet("border: none; background-color: transparent;")
-        self.ai_image_box.setFixedSize(300, 533)
+        self.ai_image_box.setMinimumSize(220, 160)
+        self.ai_image_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.ai_image_box.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.ai_layout.addWidget(self.ai_image_box, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.ai_layout.addWidget(self.ai_image_box, 1, alignment=Qt.AlignmentFlag.AlignLeft)
 
         self.ai_info_widget = QWidget()
         self.ai_info_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -172,7 +174,7 @@ class AI_Module:
 
 
         self.ai_folder_scroll_widget = QWidget()
-        self.ai_folder_scroll_widget.setMinimumHeight(500)
+        self.ai_folder_scroll_widget.setMinimumHeight(240)
         self.ai_folder_scroll = QScrollArea()
 
         self.ai_folder_scroll_layout = QVBoxLayout()
@@ -231,7 +233,8 @@ class AI_Module:
         self.preview_button.setIcon(QIcon("app/assets/eye_closed.png"))
         self.preview_button.setStyleSheet("Background-color: #2e7d32; border: none;")
         self.preview_button.setIconSize(QSize(24, 24))
-        self.preview_button.setFixedSize(32, 32)
+        self.preview_button.setMinimumSize(32, 32)
+        self.preview_button.setMaximumSize(40, 40)
         self.sync_overlay()
         
 
@@ -242,8 +245,6 @@ class AI_Module:
         self.vertical_ai_layout.addWidget(self.export_button)
 
 
-        self.img_w = self.ai_image_box.width()
-        self.img_h = self.ai_image_box.height()
         self.apply_language("uk")
 
     def get_text(self, key, fallback):
@@ -331,25 +332,15 @@ class AI_Module:
 
     def _scaled_for_ai_box(self, pixmap):
         if pixmap is None or pixmap.isNull():
-            return QPixmap(), QSize(self.img_w, self.img_h)
+            return QPixmap(), QSize(max(self.ai_image_box.width(), 1), max(self.ai_image_box.height(), 1))
 
-        # Portrait images get a portrait box (300x533), landscape/square get landscape box (533x300).
-        if pixmap.width() > pixmap.height():
-            target_size = QSize(self.img_h, self.img_w)
-        else:
-            target_size = QSize(self.img_w, self.img_h)
-
-        scaled = pixmap.scaled(
-            target_size,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation,
-        )
+        target_size = QSize(max(self.ai_image_box.width(), 1), max(self.ai_image_box.height(), 1))
+        scaled = scale_pixmap_to_fit(pixmap, target_size, min_w=1, min_h=1)
         return scaled, scaled.size()
 
 
     def _set_ai_image_pixmap(self, pixmap):
-        scaled, label_size = self._scaled_for_ai_box(pixmap)
-        self.ai_image_box.setFixedSize(label_size)
+        scaled, _ = self._scaled_for_ai_box(pixmap)
         self.ai_image_box.setPixmap(scaled)
         self.ai_image_box.setScaledContents(False)
         self.sync_overlay()
@@ -361,6 +352,25 @@ class AI_Module:
         y = margin
         self.preview_button.move(x, y)
         self.preview_button.raise_()
+
+    def refresh_on_resize(self):
+        if not self.current_image_path:
+            self.sync_overlay()
+            return
+
+        entry = next((item for item in self.pixmap_arr if item["path"] == self.current_image_path), None)
+        if entry is None:
+            self.sync_overlay()
+            return
+
+        pixmap = entry["original_pixmap"] if self.preview_state else entry["analyzed_pixmap"]
+        if pixmap is None:
+            pixmap = entry["original_pixmap"]
+
+        if pixmap is not None:
+            self._set_ai_image_pixmap(pixmap)
+        else:
+            self.sync_overlay()
 
 
 
@@ -600,11 +610,13 @@ class AI_Module:
         header = QHBoxLayout()
 
         thumb = QLabel()
-        thumb.setFixedSize(400, 225)
+        thumb.setMinimumSize(180, 100)
+        thumb.setMaximumSize(360, 220)
+        thumb.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         thumb.setStyleSheet("border: none; background-color: transparent;")
         thumb_source = preview_path if preview_path and os.path.exists(preview_path) else image_path
         pm = QPixmap(thumb_source)
-        pm = pm.scaled(400, 225, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        pm = scale_pixmap_to_fit(pm, thumb.maximumSize(), min_w=1, min_h=1)
         thumb.setPixmap(pm)
         thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
         header.addWidget(thumb)
@@ -612,7 +624,7 @@ class AI_Module:
 
         toggle_btn = QPushButton("▶")
         toggle_btn.setCheckable(True)
-        toggle_btn.setFixedWidth(24)
+        toggle_btn.setMinimumWidth(24)
         toggle_btn.setStyleSheet("QPushButton { border: none; color: #ffd500; font-weight: bold; }")
         header.addWidget(toggle_btn, alignment=Qt.AlignmentFlag.AlignTop)
 

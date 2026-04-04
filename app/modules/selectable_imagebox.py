@@ -1,17 +1,28 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QLabel, QMessageBox
 
+
 class SelectableImageBox(QLabel):
-    count = {1: None, 2: None}  # Вибрані зображення
-    path = {1: None, 2: None}   # Шляхи до зображень
+    count = {1: None, 2: None}
+    path = {1: None, 2: None}
     index = 0
     instances = []
 
     image_selected = pyqtSignal(int)
-    selection_changed = pyqtSignal()  
+    selection_changed = pyqtSignal()
 
-    def __init__(self, parent=None, second_column=None, image1=None, image2=None, point_placer=None, duped_layer=None, grid_overlay=None, grid_overlay2=None, index=None):
+    def __init__(
+        self,
+        parent=None,
+        second_column=None,
+        image1=None,
+        image2=None,
+        point_placer=None,
+        duped_layer=None,
+        grid_overlay=None,
+        grid_overlay2=None,
+        index=None,
+    ):
         super().__init__(parent)
         self.selected = False
         self.setStyleSheet("border: none;")
@@ -27,97 +38,63 @@ class SelectableImageBox(QLabel):
         self.duped_layer = duped_layer
         self.grid_overlay = grid_overlay
         self.grid_overlay2 = grid_overlay2
+        self.second_column = second_column
 
-        self.image_layout = second_column
         SelectableImageBox.instances.append(self)
-
-
-        
-
-        
 
     def set_image_path(self, file_path):
         self.file_path = file_path
 
-
-
-
     def mousePressEvent(self, event):
         self.selected = not self.selected
-        index = SelectableImageBox.index
-
 
         if self.selected:
-            # Якщо можна вибрати нове зображення
             if SelectableImageBox.count[1] is None:
-                self._set_image(1, self.image1, self.point_placer, self.grid_overlay, 320, 180)
-
+                self._set_image(1)
                 self.image_selected.emit(1)
-
             elif SelectableImageBox.count[2] is None:
-                self._set_image(2, self.image2, self.duped_layer, self.grid_overlay2, 320, 180)
-
+                self._set_image(2)
                 self.image_selected.emit(2)
-
             else:
-                QMessageBox.warning(self, "Вже вибрано 2 зображення",
-                                    "Можна вибрати лише два зображення одночасно.")
+                QMessageBox.warning(
+                    self,
+                    "Вже вибрано 2 зображення",
+                    "Можна вибрати лише два зображення одночасно.",
+                )
                 return
         else:
-            # Зняття вибору
             if SelectableImageBox.path[2] == self.file_path:
-                self._clear_image(2, self.image2, self.duped_layer, self.grid_overlay2)
+                self._clear_image(2)
             elif SelectableImageBox.path[1] == self.file_path:
-                self._clear_image(1, self.image1, self.point_placer, self.grid_overlay)
+                self._clear_image(1)
 
-
-
-
-        # Якщо обидва зображення знято, скидаємо шляхи
         if SelectableImageBox.count[1] is None and SelectableImageBox.count[2] is None:
             SelectableImageBox.path[1] = None
             SelectableImageBox.path[2] = None
 
-
-
-    def _set_image(self, slot, widget, overlay1=None, overlay2=None, w=320, h=180):
-        pixmap = QPixmap(self.file_path)
-        # Зберігаємо пропорції
-        if pixmap.width() > pixmap.height():
-            pixmap = pixmap.scaled(w, h, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-        else:
-            pixmap = pixmap.scaled(h, w, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-
-
-        widget.setPixmap(pixmap)
-        widget.setFixedSize(pixmap.size())
-
-        if overlay1:
-            overlay1.resize(widget.size())
-            
-        if overlay2:
-            overlay2.resize(widget.size())
-            
-
+    def _set_image(self, slot):
         SelectableImageBox.path[slot] = self.file_path
         SelectableImageBox.count[slot] = 1
-        self.frame.setStyleSheet("border: 2px solid #007acc;")
 
-        self.selection_changed.emit()  # Випустити сигнал
+        if self.frame is not None:
+            self.frame.setStyleSheet("border: 2px solid #007acc;")
 
-    def _clear_image(self, slot, widget, overlay1=None, overlay2=None):
-        widget.clear()
-        if overlay1:
-            overlay1.hide()
-        if overlay2:
-            overlay2.hide()
+        if self.second_column is not None:
+            self.second_column.refresh_selected_images()
 
+        self.selection_changed.emit()
+
+    def _clear_image(self, slot):
         SelectableImageBox.count[slot] = None
         SelectableImageBox.path[slot] = None
-        self.frame.setStyleSheet("border: none;")
 
-        self.selection_changed.emit()  # Випустити сигнал
+        if self.frame is not None:
+            self.frame.setStyleSheet("border: none;")
 
+        if self.second_column is not None:
+            self.second_column.refresh_selected_images()
+
+        self.selection_changed.emit()
 
     @staticmethod
     def update_index(index):

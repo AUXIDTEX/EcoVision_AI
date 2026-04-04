@@ -56,10 +56,10 @@ def switch_modes(second_column, index):
 
             second_column.ai_model_selection.hide()
 
-            if second_column.image1.show() == True:
-              second_column.point_overlay.show()
+            if SelectableImageBox.path[1]:
+                second_column.point_overlay.show()
 
-            if second_column.image2.show() == True:
+            if SelectableImageBox.path[2]:
                 second_column.duped_layer.show()
 
 

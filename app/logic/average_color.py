@@ -12,14 +12,16 @@ class Average_color:
 
         scale_x = w / self.label_w
         scale_y = h / self.label_h
+        scale_r = (scale_x + scale_y) / 2
             
         real_x = int(x * scale_x)
         real_y = int(y * scale_y)
+        real_rad = max(int(rad * scale_r), 1)
 
-        x_min = max(real_x - rad, 0)
-        x_max = min(real_x + rad, w)
-        y_min = max(real_y - rad, 0)
-        y_max = min(real_y + rad, h)
+        x_min = max(real_x - real_rad, 0)
+        x_max = min(real_x + real_rad, w)
+        y_min = max(real_y - real_rad, 0)
+        y_max = min(real_y + real_rad, h)
 
         region = self.img_arr[y_min:y_max + 1, x_min:x_max + 1, :]
         avg_chanel = np.mean(region, axis=(0, 1))

@@ -5,7 +5,7 @@ import time
 
 from PyQt6.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QWidget, QComboBox, QSizePolicy, QLineEdit, QSlider, QScrollArea, QMessageBox, QPushButton
 from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QPixmap
 
 from PIL import Image
 import numpy as np
@@ -20,6 +20,7 @@ from modules.spectal_filterer import SpectralFilterer
 from modules.change_modes import switch_modes
 from modules.ai_module import AI_Module
 from modules.mode_exporter import export_by_mode
+from modules.image_scaling import scale_pixmap_to_fit
 
 class SecondColumn(QWidget):
     index = 0
@@ -35,11 +36,13 @@ class SecondColumn(QWidget):
 
         self.settings_layout = settings_layout
         self.settings_widget = settings_widget 
+        self._comparison_min_size = QSize(220, 140)
 
         self.secon_layout = QVBoxLayout(self)
         
         self.compare_widget = QWidget()
-        self.compare_widget.setFixedHeight(50)
+        self.compare_widget.setMinimumHeight(44)
+        self.compare_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.compare_widget.setStyleSheet("background-color: #2b2b2b; border-radius: 10px; border: 1px solid #808080;")
 
         self.top_bar_layout = QHBoxLayout()
@@ -53,7 +56,7 @@ class SecondColumn(QWidget):
         self.compare_widget.setLayout(self.compare_layout)
         self.top_bar_layout.addWidget(self.compare_widget)
 
-        self.compare_title = QLabel("Режим точок")
+        self.compare_title = QLabel("Р РµР¶РёРј С‚РѕС‡РѕРє")
         self.compare_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.compare_title.setStyleSheet("font-size: 16px; color: #ffd500; border: none;")
         self.compare_layout.addWidget(self.compare_title, alignment=Qt.AlignmentFlag.AlignRight)
@@ -69,10 +72,10 @@ class SecondColumn(QWidget):
 
 
         self.mode_selection = QComboBox()
-        self.mode_selection.addItem("Точки")
-        self.mode_selection.addItem("Сітка")
-        self.mode_selection.addItem("Нейромережа")
-        self.mode_selection.addItem("Фільтрування зображень")
+        self.mode_selection.addItem("РўРѕС‡РєРё")
+        self.mode_selection.addItem("РЎС–С‚РєР°")
+        self.mode_selection.addItem("РќРµР№СЂРѕРјРµСЂРµР¶Р°")
+        self.mode_selection.addItem("Р¤С–Р»СЊС‚СЂСѓРІР°РЅРЅСЏ Р·РѕР±СЂР°Р¶РµРЅСЊ")
         self.mode_selection.setCurrentIndex(0)
 
         
@@ -103,18 +106,25 @@ class SecondColumn(QWidget):
 
         self.image_widget = QWidget()
         self.image_widget.setStyleSheet("border: 1px solid #808080; border-radius: 10px; background-color: #2b2b2b;")
+        self.image_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.image_widget.setMinimumHeight(220)
         self.image_layout = QHBoxLayout()
+        self.image_layout.setContentsMargins(8, 8, 8, 8)
+        self.image_layout.setSpacing(8)
         self.image_widget.setLayout(self.image_layout)
-        self.secon_layout.addWidget(self.image_widget)
+        self.secon_layout.addWidget(self.image_widget, 1)
 
         self.image1 = ClickableLabel(self)
         self.image1.setStyleSheet("border: none; background: transparent")
-        self.image1.setMinimumHeight(180)
-        self.image1.setMinimumWidth(320)
+        self.image1.setMinimumSize(self._comparison_min_size)
+        self.image1.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.image1.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.image2 = QLabel()
-        self.image2.setMinimumWidth(320)
+        self.image2.setMinimumSize(self._comparison_min_size)
+        self.image2.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.image2.setStyleSheet("border: none; background: transparent")
+        self.image2.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image_layout.addWidget(self.image1, alignment=Qt.AlignmentFlag.AlignCenter)
         self.image_layout.addWidget(self.image2, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -146,21 +156,22 @@ class SecondColumn(QWidget):
         self.title_value_layout = QHBoxLayout()
         self.slider_layout.addLayout(self.title_value_layout)
 
-        self.radius_title = QLabel("Радіус")
+        self.radius_title = QLabel("Р Р°РґС–СѓСЃ")
         self.title_value_layout.addWidget(self.radius_title)
         self.radius_title.setStyleSheet("color: #ffd500; border: none; font-size: 13px;")
 
         self.radius_input = QLineEdit()
         self.radius_input.setStyleSheet("border: 1px solid #808080; border-radius: 10px; color: white;")
         self.radius_input.setMinimumHeight(25)
-        self.radius_input.setFixedWidth(50)
+        self.radius_input.setMinimumWidth(52)
+        self.radius_input.setMaximumWidth(72)
         self.radius_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.radius_input.setText(str(10))
         self.title_value_layout.addWidget(self.radius_input)
 
         self.radius_slider = QSlider(Qt.Orientation.Horizontal)
         self.radius_slider.setStyleSheet("border:none;")
-        self.radius_slider.setFixedWidth(200)
+        self.radius_slider.setMinimumWidth(140)
         self.slider_layout.addWidget(self.radius_slider)
         self.radius_slider.setMinimum(3)
         self.radius_slider.setMaximum(50)
@@ -192,7 +203,7 @@ class SecondColumn(QWidget):
         self.point_overlay.send_color.connect(self.add_color)
 
 
-        self.color_title = QLabel("Координати точок")
+        self.color_title = QLabel("РљРѕРѕСЂРґРёРЅР°С‚Рё С‚РѕС‡РѕРє")
         self.color_title.setStyleSheet("color: #ffd500; border: none; font-size: 16px; padding: 5px 10px")
         self.secon_layout.addWidget(self.color_title, alignment=Qt.AlignmentFlag.AlignHCenter)
         self.color_title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
@@ -200,9 +211,10 @@ class SecondColumn(QWidget):
 
         self.color_layout = QHBoxLayout()
         self.color_widget = QWidget()
-        self.color_widget.setFixedHeight(500)
+        self.color_widget.setMinimumHeight(220)
+        self.color_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.color_widget.setLayout(self.color_layout)
-        self.secon_layout.addWidget(self.color_widget)
+        self.secon_layout.addWidget(self.color_widget, 1)
 
 
         self.first_color_widget = QWidget()
@@ -248,14 +260,15 @@ class SecondColumn(QWidget):
         self.diff_title_layout = QHBoxLayout()
         self.diff_layout.addLayout(self.diff_title_layout)
 
-        self.diff_title = QLabel("Відмінність (%)")
+        self.diff_title = QLabel("Р’С–РґРјС–РЅРЅС–СЃС‚СЊ (%)")
         self.diff_title.setStyleSheet("color: #ffd500; font-size: 13px;")
         self.diff_title_layout.addWidget(self.diff_title)
 
         self.diff_input = QLineEdit()
         self.diff_input.setStyleSheet("border: 1px solid #808080; border-radius: 10px; font-size: 13px; color: white;")
         self.diff_input.setMinimumHeight(25)
-        self.diff_input.setFixedWidth(50)
+        self.diff_input.setMinimumWidth(52)
+        self.diff_input.setMaximumWidth(72)
         self.diff_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.diff_input.setText(str(35))
         self.diff_title_layout.addWidget(self.diff_input)
@@ -284,14 +297,15 @@ class SecondColumn(QWidget):
         self.sizer_title_layout = QHBoxLayout()
         self.sizer_layout.addLayout(self.sizer_title_layout)
 
-        self.sizer_title = QLabel("Кратність сітки")
+        self.sizer_title = QLabel("РљСЂР°С‚РЅС–СЃС‚СЊ СЃС–С‚РєРё")
         self.sizer_title.setStyleSheet("color: #ffd500; font-size: 13px;")
         self.sizer_title_layout.addWidget(self.sizer_title)
 
         self.sizer_input = QLineEdit()
         self.sizer_input.setStyleSheet("border: 1px solid #808080; border-radius: 10px; font-size: 13px; color: white;")
         self.sizer_input.setMinimumHeight(25)
-        self.sizer_input.setFixedWidth(50)
+        self.sizer_input.setMinimumWidth(52)
+        self.sizer_input.setMaximumWidth(72)
         self.sizer_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.sizer_input.setText(str(1))
         self.sizer_title_layout.addWidget(self.sizer_input)
@@ -327,7 +341,7 @@ class SecondColumn(QWidget):
 
 
 
-        self.export_button = QPushButton("Експортувати")
+        self.export_button = QPushButton("Р•РєСЃРїРѕСЂС‚СѓРІР°С‚Рё")
         self.export_button.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 10px; font-size: 13px; color: white;")
         self.export_button.setMinimumHeight(36)
         self.export_button.clicked.connect(self.export_current_mode)
@@ -338,14 +352,18 @@ class SecondColumn(QWidget):
         self.settings_button.setIcon(QIcon("app/assets/settings.png"))
         self.settings_button.setIconSize(QSize(30, 30))
         self.settings_button.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 10px; font-size: 13px; color: white;")
-        self.settings_button.setFixedSize(self.compare_widget.height(), self.compare_widget.height())
+        self.settings_button.setMinimumSize(36, 36)
+        self.settings_button.setMaximumSize(48, 48)
         self.settings_button.clicked.connect(self.open_settings_dialog)
         self.top_bar_layout.addWidget(self.settings_button)
 
 
         
+        self.secon_layout.setStretchFactor(self.image_widget, 3)
+        self.secon_layout.setStretchFactor(self.color_widget, 2)
         self.secon_layout.addStretch()
         self.apply_language("uk")
+        self.refresh_on_resize()
 
     def change_model(self):
         index = self.ai_model_selection.currentIndex()
@@ -381,6 +399,71 @@ class SecondColumn(QWidget):
         self.first_scroll.verticalScrollBar().setValue(value)
         self._syncing_color_scroll = False
 
+    def _unlock_image_label_size(self, widget):
+        widget.setMinimumSize(self._comparison_min_size)
+        widget.setMaximumSize(16777215, 16777215)
+
+    def _comparison_target_size(self):
+        rect = self.image_widget.contentsRect()
+        margins = self.image_layout.contentsMargins()
+        spacing = max(self.image_layout.spacing(), 0)
+        available_width = rect.width() - margins.left() - margins.right() - spacing
+        available_height = rect.height() - margins.top() - margins.bottom()
+
+        target_width = max(available_width // 2, 1)
+        target_height = max(available_height, 1)
+        return QSize(target_width, target_height)
+
+    def _render_selected_slot(self, slot, widget, *overlays):
+        path = SelectableImageBox.path.get(slot)
+        if not path:
+            widget.clear()
+            self._unlock_image_label_size(widget)
+            for overlay in overlays:
+                if overlay:
+                    overlay.hide()
+            return
+
+        pixmap = scale_pixmap_to_fit(
+            QPixmap(path),
+            self._comparison_target_size(),
+            min_w=1,
+            min_h=1,
+        )
+        if pixmap.isNull():
+            return
+
+        widget.setPixmap(pixmap)
+        widget.setFixedSize(pixmap.size())
+
+        for overlay in overlays:
+            if overlay:
+                overlay.resize(widget.size())
+                overlay.update()
+
+    def refresh_selected_images(self):
+        self._render_selected_slot(1, self.image1, self.point_overlay, self.grid_overlay)
+        self._render_selected_slot(2, self.image2, self.duped_layer, self.grid_overlay2)
+
+    def refresh_on_resize(self):
+        self.refresh_selected_images()
+
+        if hasattr(self.point_overlay, "refresh_points_positions"):
+            self.point_overlay.refresh_points_positions()
+        if hasattr(self.duped_layer, "refresh_points_positions"):
+            self.duped_layer.refresh_points_positions()
+
+        self.grid_overlay.resize(self.image1.size())
+        self.grid_overlay2.resize(self.image2.size())
+
+        if self.mode == 1 and SelectableImageBox.path[1] and SelectableImageBox.path[2]:
+            self.grid_overlay.draw_grid(self.diff_slider.value())
+            self.grid_overlay2.draw_grid(self.diff_slider.value())
+
+        if hasattr(self.ai_module, "refresh_on_resize"):
+            self.ai_module.refresh_on_resize()
+        if hasattr(self.spectral_filterer, "refresh_on_resize"):
+            self.spectral_filterer.refresh_on_resize()
 
     
 
@@ -423,6 +506,7 @@ class SecondColumn(QWidget):
 
     def switch_mode_func(self, index):
         switch_modes(self, index)
+        self.refresh_on_resize()
 
     def export_current_mode(self):
         export_by_mode(self)
@@ -472,6 +556,8 @@ class SecondColumn(QWidget):
         SelectableImageBox.reset_selection_state()
         self.image1.clear()
         self.image2.clear()
+        self._unlock_image_label_size(self.image1)
+        self._unlock_image_label_size(self.image2)
 
         for point in self.point_overlay.points:
             point["image"].deleteLater()
@@ -480,7 +566,8 @@ class SecondColumn(QWidget):
             if point.get("label_second"):
                 point["label_second"].deleteLater()
 
-        for _x, _y, image, _radius in self.duped_layer.points:
+        for point in self.duped_layer.points:
+            image = point["image"] if isinstance(point, dict) else point[2]
             image.deleteLater()
 
         self.point_overlay.points.clear()
@@ -541,6 +628,10 @@ class SecondColumn(QWidget):
             QMessageBox.warning(self, self.get_text("warning"), self.get_text("select_two_images"))
             return
 
-        self.point_overlay.add_point(x, y)
+        x_ratio, y_ratio = self.point_overlay.add_point(x, y)
         self.point_overlay.average_colors()
-        self.duped_layer.add_point(x, y)
+        self.duped_layer.add_point_by_ratio(x_ratio, y_ratio)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.refresh_on_resize()
