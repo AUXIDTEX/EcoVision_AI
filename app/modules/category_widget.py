@@ -12,6 +12,7 @@ from modules.selectable_imagebox import SelectableImageBox
 
 class CategoryWidget(QWidget):
     add_image_to_array = pyqtSignal(str)
+    deleted = pyqtSignal(object)
 
     def __init__(self, parent=None, category_name=None, second_col=None, image1=None, image2=None):
         super().__init__(parent)
@@ -177,6 +178,7 @@ class CategoryWidget(QWidget):
         self.second_column.refresh_selected_images()
         self.second_column.spectral_filterer.set_image()
 
+        self.deleted.emit(self)
         self.setParent(None)
         self.deleteLater()
 

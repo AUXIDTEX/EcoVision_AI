@@ -56,7 +56,7 @@ class SecondColumn(QWidget):
         self.compare_widget.setLayout(self.compare_layout)
         self.top_bar_layout.addWidget(self.compare_widget)
 
-        self.compare_title = QLabel("Р РµР¶РёРј С‚РѕС‡РѕРє")
+        self.compare_title = QLabel("Режим точок")
         self.compare_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.compare_title.setStyleSheet("font-size: 16px; color: #ffd500; border: none;")
         self.compare_layout.addWidget(self.compare_title, alignment=Qt.AlignmentFlag.AlignRight)
@@ -72,10 +72,10 @@ class SecondColumn(QWidget):
 
 
         self.mode_selection = QComboBox()
-        self.mode_selection.addItem("РўРѕС‡РєРё")
-        self.mode_selection.addItem("РЎС–С‚РєР°")
-        self.mode_selection.addItem("РќРµР№СЂРѕРјРµСЂРµР¶Р°")
-        self.mode_selection.addItem("Р¤С–Р»СЊС‚СЂСѓРІР°РЅРЅСЏ Р·РѕР±СЂР°Р¶РµРЅСЊ")
+        self.mode_selection.addItem("Точки")
+        self.mode_selection.addItem("Сітка")
+        self.mode_selection.addItem("Нейромережа")
+        self.mode_selection.addItem("Фільтрування зображень")
         self.mode_selection.setCurrentIndex(0)
 
         
@@ -156,7 +156,7 @@ class SecondColumn(QWidget):
         self.title_value_layout = QHBoxLayout()
         self.slider_layout.addLayout(self.title_value_layout)
 
-        self.radius_title = QLabel("Р Р°РґС–СѓСЃ")
+        self.radius_title = QLabel("Радіус")
         self.title_value_layout.addWidget(self.radius_title)
         self.radius_title.setStyleSheet("color: #ffd500; border: none; font-size: 13px;")
 
@@ -203,7 +203,7 @@ class SecondColumn(QWidget):
         self.point_overlay.send_color.connect(self.add_color)
 
 
-        self.color_title = QLabel("РљРѕРѕСЂРґРёРЅР°С‚Рё С‚РѕС‡РѕРє")
+        self.color_title = QLabel("Координати точок")
         self.color_title.setStyleSheet("color: #ffd500; border: none; font-size: 16px; padding: 5px 10px")
         self.secon_layout.addWidget(self.color_title, alignment=Qt.AlignmentFlag.AlignHCenter)
         self.color_title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
@@ -260,7 +260,7 @@ class SecondColumn(QWidget):
         self.diff_title_layout = QHBoxLayout()
         self.diff_layout.addLayout(self.diff_title_layout)
 
-        self.diff_title = QLabel("Р’С–РґРјС–РЅРЅС–СЃС‚СЊ (%)")
+        self.diff_title = QLabel("Відмінність (%)")
         self.diff_title.setStyleSheet("color: #ffd500; font-size: 13px;")
         self.diff_title_layout.addWidget(self.diff_title)
 
@@ -297,7 +297,7 @@ class SecondColumn(QWidget):
         self.sizer_title_layout = QHBoxLayout()
         self.sizer_layout.addLayout(self.sizer_title_layout)
 
-        self.sizer_title = QLabel("РљСЂР°С‚РЅС–СЃС‚СЊ СЃС–С‚РєРё")
+        self.sizer_title = QLabel("Кратність сітки")
         self.sizer_title.setStyleSheet("color: #ffd500; font-size: 13px;")
         self.sizer_title_layout.addWidget(self.sizer_title)
 
@@ -341,7 +341,7 @@ class SecondColumn(QWidget):
 
 
 
-        self.export_button = QPushButton("Р•РєСЃРїРѕСЂС‚СѓРІР°С‚Рё")
+        self.export_button = QPushButton("Експортувати")
         self.export_button.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 10px; font-size: 13px; color: white;")
         self.export_button.setMinimumHeight(36)
         self.export_button.clicked.connect(self.export_current_mode)
@@ -352,8 +352,7 @@ class SecondColumn(QWidget):
         self.settings_button.setIcon(QIcon("app/assets/settings.png"))
         self.settings_button.setIconSize(QSize(30, 30))
         self.settings_button.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 10px; font-size: 13px; color: white;")
-        self.settings_button.setMinimumSize(36, 36)
-        self.settings_button.setMaximumSize(48, 48)
+        self.settings_button.setFixedSize(40, 40)
         self.settings_button.clicked.connect(self.open_settings_dialog)
         self.top_bar_layout.addWidget(self.settings_button)
 

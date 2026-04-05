@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QFrame, QSizePolicy, QLineEdit, QPushButton, QScrollArea, QSplitter
+from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QFrame, QSizePolicy, QLineEdit, QPushButton, QScrollArea, QSplitter, QGridLayout
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QFont
 import os
@@ -11,7 +11,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("РџРѕСЂС–РІРЅСЏРЅРЅСЏ Р·РѕР±СЂР°Р¶РµРЅСЊ")
+        self.setWindowTitle("EcoVision_AI")
         self.resize(1366, 768)
         self.setMinimumSize(1280, 720)
         self.setWindowIcon(QIcon('app/assets/radar.ico'))
@@ -29,6 +29,7 @@ class MainWindow(QMainWindow):
         self.main_col_widget.setLayout(self.main_col)
         self.main_col_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.main_col_widget.setMinimumWidth(340)
+        self.category_widgets = []
 
 
 
@@ -40,11 +41,11 @@ class MainWindow(QMainWindow):
         self.main_col.addWidget(self.add_widget, alignment=Qt.AlignmentFlag.AlignTop)
 
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Р’РІРµРґС–С‚СЊ РЅР°Р·РІСѓ")
+        self.name_input.setPlaceholderText("Введіть назву")
         self.name_input.setStyleSheet("padding: 6px; border-radius: 8px; background-color: #3b3b3b; color: white; border: 1px solid #808080;")
         self.add_layout.addWidget(self.name_input)
 
-        self.add_button = QPushButton("Р”РѕРґР°С‚Рё")
+        self.add_button = QPushButton("Додати")
         self.add_button.clicked.connect(self.add_category)
         self.add_button.setStyleSheet("background-color: transparent; color: #ffd500; padding: 8px 14px; border-radius: 8px; border: 1px solid #ffd500;")
         self.add_layout.addWidget(self.add_button)
@@ -53,15 +54,15 @@ class MainWindow(QMainWindow):
         self.cats_frame = QFrame()
         self.cats_frame.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 8px; padding: 2px;")
 
-        self.cats_layout = QHBoxLayout(self.cats_frame)
+        self.cats_layout = QGridLayout(self.cats_frame)
         self.cats_layout.setContentsMargins(5, 5, 5, 5)
         self.cats_layout.setSpacing(10)
-        self.cats_layout.addStretch()
+        self.cats_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.scroll_area.setMinimumHeight(220)
 
         self.scroll_area.setWidget(self.cats_frame)
@@ -102,11 +103,32 @@ class MainWindow(QMainWindow):
 
             category.setMaximumWidth(420)
             category.setMinimumWidth(220)
+            category.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
 
             category.add_image_to_array.connect(self.second_col.add_image_to_array) # Connect signal to second column method
+            category.deleted.connect(self._remove_category)
 
-            self.cats_layout.insertWidget(self.cats_layout.count() - 1, category)
+            self.category_widgets.append(category)
+            self._reflow_categories()
             category.apply_language(self.settings_manager.get_language())
+
+    def _reflow_categories(self):
+        while self.cats_layout.count():
+            item = self.cats_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.setParent(self.cats_frame)
+
+        max_cols = 3
+        for index, category in enumerate(self.category_widgets):
+            row = index // max_cols
+            col = index % max_cols
+            self.cats_layout.addWidget(category, row, col)
+
+    def _remove_category(self, category):
+        if category in self.category_widgets:
+            self.category_widgets.remove(category)
+            self._reflow_categories()
 
     def get_text(self, key):
         if hasattr(self, "settings_manager"):
@@ -126,8 +148,6 @@ class MainWindow(QMainWindow):
         if hasattr(self, "second_col"):
             self.second_col.apply_language(language)
 
-        for i in range(self.cats_layout.count()):
-            item = self.cats_layout.itemAt(i)
-            widget = item.widget() if item else None
-            if widget and hasattr(widget, "apply_language"):
-                widget.apply_language(language)
+        for category in self.category_widgets:
+            if hasattr(category, "apply_language"):
+                category.apply_language(language)

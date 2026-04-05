@@ -484,8 +484,7 @@ class SpectralFilterer(QWidget):
                 
 
                 QApplication.processEvents()
-
-        # Р В РІР‚вЂќР В Р’В°Р В Р вЂ Р В Р’ВµР РЋР вЂљР РЋРІвЂљВ¬Р В Р’ВµР В Р вЂ¦Р В Р вЂ¦Р РЋР РЏ
+        # Done
         print(f"Saved {current_task} images.")
         self.progress_bar.hide()
 
