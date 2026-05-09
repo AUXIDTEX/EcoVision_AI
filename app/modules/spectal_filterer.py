@@ -54,11 +54,12 @@ class SpectralFilterer(QWidget):
         self.update_styles()
 
         self.horizontal_layout = QHBoxLayout()
-        self.main_layout.addLayout(self.horizontal_layout)
+        self.main_layout.addLayout(self.horizontal_layout, 1)
 
         self.image_widget = QWidget()
         self.image_layout = QHBoxLayout()
         self.image_widget.setMinimumSize(160, 120)
+        self.image_widget.setMaximumSize(320, 240)
         self.image_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.image_widget.setStyleSheet("border: 2px solid #808080; border-radius: 8px; background-color: #2b2b2b;")
         self.image_widget.setLayout(self.image_layout)
@@ -77,18 +78,25 @@ class SpectralFilterer(QWidget):
 
 
 
-        self.filter_layout = QVBoxLayout()
-        self.horizontal_layout.addLayout(self.filter_layout)
+        self.filter_widget = QWidget()
+        self.filter_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.filter_layout = QVBoxLayout(self.filter_widget)
+        self.filter_layout.setContentsMargins(0, 0, 0, 0)
+        self.filter_layout.setSpacing(0)
+        self.horizontal_layout.addWidget(self.filter_widget, 1)
 
 
 
 
         self.filter_scroll = QScrollArea()
-        self.filter_layout.addWidget(self.filter_scroll)
+        self.filter_scroll.setSizeAdjustPolicy(QScrollArea.SizeAdjustPolicy.AdjustIgnored)
+        self.filter_scroll.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.filter_layout.addWidget(self.filter_scroll, 1)
         self.filter_scroll.setWidgetResizable(True)
 
         self.scroll_widget = QWidget()
         self.scroll_layout = QVBoxLayout()
+        self.scroll_layout.setContentsMargins(0, 0, 0, 0)
 
         self.add_filter_btn = QPushButton()
         self.scroll_layout.addWidget(self.add_filter_btn, alignment=Qt.AlignmentFlag.AlignRight)
@@ -120,6 +128,7 @@ class SpectralFilterer(QWidget):
 
         self.save_button = QPushButton("Save all variants")
         self.save_button.setMinimumHeight(36)
+        self.save_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.save_button.setStyleSheet("""
             QPushButton {
                 background-color: #2e7d32; 
@@ -130,11 +139,12 @@ class SpectralFilterer(QWidget):
             QPushButton:hover { background-color: #388e3c; }
         """)
         self.save_button.clicked.connect(self.save_filtered_images)
-        self.main_layout.addWidget(self.save_button)
+        self.main_layout.addWidget(self.save_button, alignment=Qt.AlignmentFlag.AlignBottom)
 
 
         self.folder_select_btn = QPushButton("Select folder")
         self.folder_select_btn.setMinimumHeight(36)
+        self.folder_select_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.main_layout.addWidget(self.folder_select_btn)
         self.folder_select_btn.setStyleSheet("""
                                              QPushButton {
@@ -158,6 +168,7 @@ class SpectralFilterer(QWidget):
 
 
         self.progress_bar = QProgressBar()
+        self.progress_bar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.progress_bar.setStyleSheet("""
             QProgressBar {
                 border: 1px solid #808080;
@@ -290,6 +301,8 @@ class SpectralFilterer(QWidget):
 
             self.apply_filter(self.active_filter)
 
+            self.image_widget.setMaximumSize(16777215, 16777215)
+
         else:
             self._set_placeholder_image()
 
@@ -297,6 +310,8 @@ class SpectralFilterer(QWidget):
                 self.active_images.remove(self.selected_image_path)
 
             self.selected_image_path = None
+
+            self.image_widget.setMaximumSize(320, 240)
 
 
     

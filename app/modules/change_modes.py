@@ -17,7 +17,7 @@ def switch_modes(second_column, index):
 
 
 
-        if index == 0 and second_column.image_array:
+        if index == 0:
             second_column.mode = 0
             #POINT MODE
 
@@ -69,7 +69,7 @@ def switch_modes(second_column, index):
 
 
 
-        elif index == 1 and second_column.image_array:
+        elif index == 1:
             second_column.mode = 1
             #GRID MODE 
 
@@ -160,7 +160,7 @@ def switch_modes(second_column, index):
 
 
 
-        elif index == 3 and second_column.image_array:
+        elif index == 3:
             second_column.mode = 3
             #SPECTRAL FILTERER MODE
 

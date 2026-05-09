@@ -5,18 +5,23 @@ import glob
 import torch
 
 
-model = YOLO("/workspace/app/assets/Tree_disseses_finder.pt")
+#model = YOLO("/workspace/app/models/Water_disease_finder.pt")
+model = YOLO("D:/Project Data/app/models/Water_disease_finder.pt")
 
-torch.cuda.empty_cache() 
-
-print("Розігрів GPU...")
-dummy_input = torch.zeros(1, 3, 640, 640).to('cuda') 
-model(dummy_input, verbose=False) 
-print("GPU готовий до роботи.")
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
+if device.startswith("cuda"):
+    torch.cuda.empty_cache()
+    print("Розігрів GPU...")
+    model.predict(source=torch.zeros(1, 3, 640, 640, device=device), device=device, verbose=False)
+    print("GPU готовий до роботи.")
+else:
+    print("CUDA недоступна, використовується CPU.")
 
 
 # 2. Налаштування шляхів
-input_dir = "/workspace/ai_module/Frames/packet2/small/train/"  # Папка з вхідними фото
+#input_dir = "/workspace/ai_module/Frames/packet2/small/train/"  # Папка з вхідними фото
+input_dir = "D:\\Project Data\\ai_module\\dataset_2\\val\\images"  # Папка з вхідними фото
+
 save_dir = "output_images"
 os.makedirs(save_dir, exist_ok=True)
 
@@ -31,24 +36,22 @@ if not image_files:
 else:
     print(f"Знайдено зображень: {len(image_files)}. Починаю обробку...")
 
-    
-    results = model(image_files, device='0', stream=True)
+    for i, image_path in enumerate(image_files, start=1):
+        # Обробляємо по одному файлу, щоб не перевантажувати оперативну пам'ять.
+        results = model.predict(
+            source=image_path,
+            device=device,
+            imgsz=640,
+            stream=False,
+            verbose=False,
+        )
 
-    for i, r in enumerate(results):
-        
-        original_filename = os.path.basename(r.path)
-        base_name = os.path.splitext(original_filename)[0]
-        
-        
-        res_plotted = r.plot()
-
-        
-        out_path = os.path.join(save_dir, f"{base_name}_result.jpg")
-
-        
-        cv2.imwrite(out_path, res_plotted)
-        
-       
-        print(f"[{i+1}/{len(image_files)}] Оброблено: {original_filename} -> {out_path}")
+        for r in results:
+            original_filename = os.path.basename(r.path)
+            base_name = os.path.splitext(original_filename)[0]
+            res_plotted = r.plot()
+            out_path = os.path.join(save_dir, f"{base_name}_result.jpg")
+            cv2.imwrite(out_path, res_plotted)
+            print(f"[{i}/{len(image_files)}] Оброблено: {original_filename} -> {out_path}")
 
 print("\nВсі зображення успішно оброблені!")

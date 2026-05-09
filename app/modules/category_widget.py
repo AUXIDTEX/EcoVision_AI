@@ -17,11 +17,14 @@ class CategoryWidget(QWidget):
     def __init__(self, parent=None, category_name=None, second_col=None, image1=None, image2=None):
         super().__init__(parent)
 
+        
         self.file_path = None
-        self.preview_min_size = QSize(150, 110)
+        self.preview_min_size = QSize(120, 88)
 
         self.image_array = second_col.image_array
         self.category_layout = QVBoxLayout(self)
+        self.category_layout.setContentsMargins(8, 8, 8, 8)
+        self.category_layout.setSpacing(6)
 
         self.second_column = second_col
         self.point_overlay = second_col.point_overlay
@@ -31,18 +34,21 @@ class CategoryWidget(QWidget):
         self.index = second_col.mode_selection.currentIndex()
 
         self.category_name = QLabel()
-        self.category_name.setStyleSheet("background-color: #3b3b3b; border-radius: 8px; padding: 0px 30px; color: white")
+        self.category_name.setStyleSheet("background-color: #3b3b3b; border-radius: 8px; padding: 0px 12px; color: white")
         self.category_name.setText(category_name)
         self.category_name.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        self.category_name.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        self.category_name.setFixedHeight(self.category_name.sizeHint().height())
         self.category_layout.addWidget(self.category_name, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
 
         self.Image_border = QFrame()
         self.Image_border.setStyleSheet("border: none;")
+        self.Image_border.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.Image_border_layout = QVBoxLayout(self.Image_border)
-        self.Image_border_layout.setContentsMargins(0, 0, 0, 0)
+        self.Image_border_layout.setContentsMargins(10, 10, 10, 10)
         self.Image_border_layout.setSpacing(0)
-        self.category_layout.addWidget(self.Image_border, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.category_layout.addWidget(self.Image_border, 1)
 
         self.Image_box = SelectableImageBox(
             self.Image_border,
@@ -62,39 +68,74 @@ class CategoryWidget(QWidget):
         self.Image_box.setStyleSheet("border: none;")
         self.Image_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.Image_box.setMinimumSize(self.preview_min_size)
+        self.Image_box.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.Image_border_layout.addWidget(self.Image_box)
 
         self.bottom_container = QHBoxLayout()
+        self.bottom_container.setContentsMargins(0, 0, 0, 0)
+        self.bottom_container.setSpacing(4)
         self.bottom_widget = QWidget()
         self.bottom_widget.setStyleSheet("border: none; background-color: transparent;")
+        self.bottom_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.bottom_widget.setLayout(self.bottom_container)
         self.category_layout.addWidget(self.bottom_widget, alignment=Qt.AlignmentFlag.AlignBottom)
 
         self.add_image_btn = QPushButton("Додати зображення")
-        self.add_image_btn.setMinimumHeight(32)
-        self.add_image_btn.setStyleSheet("color: white; border: 1px solid #808080; padding: 6px 12px; border-radius: 8px; background-color: #3b3b3b;")
+        self.add_image_btn.setFixedHeight(self.add_image_btn.sizeHint().height())
+        self.add_image_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.add_image_btn.setStyleSheet("color: white; border: 1px solid #808080; padding: 4px 8px; border-radius: 8px; background-color: #3b3b3b;")
         self.add_image_btn.clicked.connect(self.add_image)
         self.bottom_container.addWidget(self.add_image_btn)
 
         self.switch_image_btn = QPushButton("Змінити зображення")
-        self.switch_image_btn.setStyleSheet("color: white; border: 1px solid #808080; padding: 6px 12px; border-radius: 8px; background-color: #3b3b3b;")
+        self.switch_image_btn.setFixedHeight(self.switch_image_btn.sizeHint().height())
+        self.switch_image_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.switch_image_btn.setStyleSheet("color: white; border: 1px solid #808080; padding: 4px 8px; border-radius: 8px; background-color: #3b3b3b;")
         self.switch_image_btn.clicked.connect(self.switch_image)
 
         self.delete_category_button = QPushButton()
         self.delete_category_button.setStyleSheet("background-color: #3b3b3b; border-radius: 8px; border: 1px solid #808080;")
-        self.bottom_container.addWidget(self.delete_category_button)
         self.delete_category_button.setIcon(QIcon("app/assets/delete_icon.png"))
-        self.delete_category_button.setIconSize(QSize(24, 24))
-        self.delete_category_button.setMinimumSize(32, 32)
-        self.delete_category_button.setMaximumSize(38, 38)
+        self.delete_category_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.delete_category_button.clicked.connect(self.delete_category)
+        self.bottom_container.addWidget(self.delete_category_button)
+
+        bottom_height = max(
+            self.add_image_btn.sizeHint().height(),
+            self.switch_image_btn.sizeHint().height(),
+            self.delete_category_button.sizeHint().height(),
+        )
+        self.bottom_widget.setFixedHeight(bottom_height)
+        self.add_image_btn.setFixedHeight(bottom_height)
+        self.switch_image_btn.setFixedHeight(bottom_height)
+        self.delete_category_button.setFixedSize(bottom_height, bottom_height)
+        self.delete_category_button.setIconSize(QSize(max(bottom_height - 10, 16), max(bottom_height - 10, 16)))
 
         self.Image_box.image_selected.connect(self.second_column.ai_module.select_image)
         manager = getattr(self.second_column.window, "settings_manager", None)
         language = manager.get_language() if manager else "uk"
         self.apply_language(language)
 
+    def set_compact_width(self, width):
+        width = max(width, 90)
+        self.setFixedWidth(width)
+        card_height = max(int(width * 1.20), 320)
+        self.setFixedHeight(card_height)
+
+        preview_width = max(width - 16, 64)
+        title_height = self.category_name.sizeHint().height()
+        bottom_height = self.bottom_widget.sizeHint().height()
+        preview_height = max(card_height - title_height - bottom_height - 24, 72)
+        self.preview_min_size = QSize(preview_width, preview_height)
+        self.Image_box.setMinimumSize(self.preview_min_size)
+        self.category_name.setFixedHeight(title_height)
+        self.category_name.setMaximumWidth(max(width - 16, 1))
+        self.bottom_widget.setFixedHeight(bottom_height)
+        self._refresh_preview()
+
     def _refresh_preview(self):
+        self.Image_box.setMaximumHeight(16777215)
+
         if not self.file_path:
             return
 
@@ -156,6 +197,7 @@ class CategoryWidget(QWidget):
         self.second_column.spectral_filterer.set_image()
 
     def delete_category(self):
+        SelectableImageBox.unregister_instance(self.Image_box)
         if SelectableImageBox.path[1] == self.Image_box.file_path:
             self.Image_box.image1.setPixmap(QPixmap())
             SelectableImageBox.path[1] = None

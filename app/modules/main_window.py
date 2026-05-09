@@ -55,8 +55,9 @@ class MainWindow(QMainWindow):
         self.cats_frame.setStyleSheet("background-color: #2b2b2b; border: 1px solid #808080; border-radius: 8px; padding: 2px;")
 
         self.cats_layout = QGridLayout(self.cats_frame)
-        self.cats_layout.setContentsMargins(5, 5, 5, 5)
-        self.cats_layout.setSpacing(10)
+        self.cats_layout.setContentsMargins(8, 8, 8, 8)
+        self.cats_layout.setHorizontalSpacing(14)
+        self.cats_layout.setVerticalSpacing(14)
         self.cats_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
         self.scroll_area = QScrollArea()
@@ -84,14 +85,16 @@ class MainWindow(QMainWindow):
         self.main_splitter.addWidget(self.main_col_widget)
         self.main_splitter.addWidget(self.second_col)
         self.main_splitter.setStretchFactor(0, 1)
-        self.main_splitter.setStretchFactor(1, 2)
-        self.main_splitter.setSizes([460, 900])
+        self.main_splitter.setStretchFactor(1, 1)
+        self.main_splitter.setSizes([680, 680])
+        self.main_splitter.splitterMoved.connect(lambda *_: self._reflow_categories())
         self.Main_layout.addWidget(self.main_splitter)
 
         self.main_col.addStretch()
 
         self.settings_manager = AppSettingsManager(self)
         self.settings_manager.apply_loaded_settings()
+        self._reflow_categories()
         
 
     def add_category(self):
@@ -101,9 +104,7 @@ class MainWindow(QMainWindow):
 
             category = CategoryWidget(self, category_name=category_name, second_col = self.second_col, image1=self.second_col.image1, image2=self.second_col.image2)
 
-            category.setMaximumWidth(420)
-            category.setMinimumWidth(220)
-            category.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+            category.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
             category.add_image_to_array.connect(self.second_col.add_image_to_array) # Connect signal to second column method
             category.deleted.connect(self._remove_category)
@@ -120,10 +121,31 @@ class MainWindow(QMainWindow):
                 widget.setParent(self.cats_frame)
 
         max_cols = 3
+        self.cats_layout.setColumnStretch(0, 1)
+        self.cats_layout.setColumnStretch(1, 1)
+        self.cats_layout.setColumnStretch(2, 1)
+
+        viewport_width = max(self.scroll_area.viewport().width(), 1)
+        margins = self.cats_layout.contentsMargins()
+        spacing = self.cats_layout.horizontalSpacing()
+        if spacing < 0:
+            spacing = self.cats_layout.spacing()
+
+        usable_width = viewport_width - margins.left() - margins.right() - (spacing * (max_cols - 1))
+        card_width = max(usable_width // max_cols, 90)
+
         for index, category in enumerate(self.category_widgets):
             row = index // max_cols
             col = index % max_cols
+            if hasattr(category, "set_compact_width"):
+                category.set_compact_width(card_width)
+            else:
+                category.setFixedWidth(card_width)
             self.cats_layout.addWidget(category, row, col)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._reflow_categories()
 
     def _remove_category(self, category):
         if category in self.category_widgets:

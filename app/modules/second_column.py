@@ -65,6 +65,8 @@ class SecondColumn(QWidget):
 
 
         self.switch_layout = QHBoxLayout()
+        self.switch_layout.setContentsMargins(0, 0, 0, 0)
+        self.switch_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         self.switch_widget = QWidget()
         self.switch_widget.setStyleSheet("border: none; background-color: transparent;")
         self.switch_widget.setLayout(self.switch_layout)
@@ -100,7 +102,7 @@ class SecondColumn(QWidget):
         self.change_model()
 
         self.compare_layout.addWidget(self.switch_widget, alignment=Qt.AlignmentFlag.AlignRight)
-        self.switch_layout.addWidget(self.mode_selection)
+        self.switch_layout.addWidget(self.mode_selection, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         
 
@@ -335,6 +337,7 @@ class SecondColumn(QWidget):
         self.grid_overlay2.hide()
 
         self.spectral_filterer = SpectralFilterer(self)
+        self.spectral_filterer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.secon_layout.addWidget(self.spectral_filterer)
         self.spectral_filterer.hide()
 
@@ -360,7 +363,6 @@ class SecondColumn(QWidget):
         
         self.secon_layout.setStretchFactor(self.image_widget, 3)
         self.secon_layout.setStretchFactor(self.color_widget, 2)
-        self.secon_layout.addStretch()
         self.apply_language("uk")
         self.refresh_on_resize()
 
